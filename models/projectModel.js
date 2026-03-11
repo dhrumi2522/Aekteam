@@ -185,7 +185,6 @@ exports.getEmployees = async () => {
 // };
 
 
-
 exports.getTimeSummary = async (emp_id, project_id, start_date, end_date) => {
     let query = `
         SELECT 
@@ -201,22 +200,22 @@ exports.getTimeSummary = async (emp_id, project_id, start_date, end_date) => {
     let values = [];
 
     // Dynamically append conditions
-    if (emp_id) {
+    if (emp_id && emp_id !== '') {
         conditions.push(`emp_id = $${values.length + 1}`);
         values.push(emp_id);
     }
 
-    if (project_id) {
+    if (project_id && project_id !== '') {
         conditions.push(`project = $${values.length + 1}`);
         values.push(project_id);
     }
 
-    if (start_date) {
+    if (start_date && start_date !== '') {
         conditions.push(`date >= $${values.length + 1}`);
         values.push(start_date);
     }
 
-    if (end_date) {
+    if (end_date && end_date !== '') {
         conditions.push(`date <= $${values.length + 1}`);
         values.push(end_date);
     }
@@ -227,7 +226,7 @@ exports.getTimeSummary = async (emp_id, project_id, start_date, end_date) => {
     }
 
     // Sorting by date
-    query += " ORDER BY date DESC;";
+    query += " ORDER BY date DESC, emp_id;";
 
     try {
         const result = await pool.query(query, values);
@@ -237,7 +236,6 @@ exports.getTimeSummary = async (emp_id, project_id, start_date, end_date) => {
         throw error;
     }
 };
-
 // Get work summary data for a specific employee (filtered by emp_id)
 
 // Fetch all projects from work_projects table
