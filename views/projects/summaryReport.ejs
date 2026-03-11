@@ -176,6 +176,18 @@
             background: #e9ecef;
         }
 
+        .employee-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .date-header {
+            background-color: #e9ecef !important;
+            font-weight: 700 !important;
+            color: #495057 !important;
+            font-size: 16px !important;
+        }
+
         /* Mobile Menu Button */
         .mobile-menu-btn {
             display: none;
@@ -262,14 +274,13 @@
     <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
     
     <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <% if (role === 'hr') { %>
-        <%- include('../partials/hrsidebar') %>
-    <% } else { %>
-        <%- include('../partials/sidebar') %>
-    <% } %>
-</div>
-
+    <div class="sidebar" id="sidebar">
+        <% if (role === 'hr') { %>
+            <%- include('../partials/hrsidebar') %>
+        <% } else { %>
+            <%- include('../partials/sidebar') %>
+        <% } %>
+    </div>
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
@@ -289,8 +300,7 @@
                         <option value="">All Projects</option>
                         <% if (projects && projects.length > 0) { %>
                             <% projects.forEach(proj => { %>
-                              <option value="<%= proj.project_name %>"><%= proj.project_name %></option>
-
+                                <option value="<%= proj.project_name %>"><%= proj.project_name %></option>
                             <% }); %>
                         <% } else { %>
                             <option value="" disabled>No projects available</option>
@@ -368,6 +378,9 @@
             let workChart = null;
             let projectChart = null;
 
+            // Store employee names mapping
+            let employeeNames = {};
+
             // Function to fetch employee list
             function fetchEmployees() {
                 fetch("/dashboard/employee/projects/get-employees")
@@ -377,7 +390,10 @@
                     })
                     .then(data => {
                         empSelect.innerHTML = '<option value="">All Employees</option>';
+                        
+                        // Store employee names in mapping
                         data.forEach(emp => {
+                            employeeNames[emp.emp_id] = emp.name;
                             let option = document.createElement("option");
                             option.value = emp.emp_id;
                             option.textContent = emp.name;
@@ -396,7 +412,7 @@
                 const selectedMonth = monthSelect.value;
                 const includePastMonth = pastMonthCheckbox.checked;
 
-                let start_date = "", end_date = "", prevMonthFlag = "";
+                let start_date = "", end_date = "";
 
                 if (selectedMonth) {
                     let [year, month] = selectedMonth.split("-");
@@ -404,34 +420,23 @@
                     end_date = new Date(year, month, 0).toISOString().slice(0, 10);
                 }
 
-                if (includePastMonth) {
-                    prevMonthFlag = "&prev_month=true";
-                }
-
                 // Show loading state
                 reportTableBody.innerHTML = `<tr><td colspan="5">Loading data...</td></tr>`;
 
-                fetch(`/dashboard/employee/projects/get-summary?emp_id=${empId}&project_id=${projectId}&start_date=${start_date}&end_date=${end_date}${prevMonthFlag}`)
+                let url = `/dashboard/employee/projects/get-summary?emp_id=${empId}&project_id=${projectId}&start_date=${start_date}&end_date=${end_date}`;
+                
+                if (includePastMonth) {
+                    url += '&prev_month=true';
+                }
+
+                fetch(url)
                     .then(res => {
                         if (!res.ok) throw new Error('Failed to fetch summary data');
                         return res.json();
                     })
                     .then(data => {
-                        let daysInMonth = getFullMonthDays(start_date.split("-")[0], start_date.split("-")[1]);
-                        let hoursByDay = {}, projectHours = {};
-
-                        daysInMonth.forEach(day => hoursByDay[day] = 0);
-
-                        data.daily.forEach(entry => {
-                            let day = new Date(entry.date).getDate().toString();
-                            hoursByDay[day] += entry.hours || 0;
-                        });
-
-                        projectHours = data.projectWise;
-
-                        renderChart(daysInMonth, Object.values(hoursByDay), data.daily);
-                        renderProjectChart(projectHours);
-                        renderTable(data.daily);
+                        // Process data for charts and table
+                        processAndRenderData(data);
                     })
                     .catch(error => {
                         console.error("Error fetching data:", error);
@@ -439,16 +444,47 @@
                     });
             }
 
-            // Function to get all days in a month
-            function getFullMonthDays(year, month) {
-                if (!year || !month) {
-                    // If no month selected, use current month
+            // Process data and render everything
+            function processAndRenderData(data) {
+                // Prepare data for daily chart
+                const dailyData = processDailyData(data.daily);
+                
+                // Render charts
+                renderChart(dailyData.labels, dailyData.values, data.daily);
+                renderProjectChart(data.projectWise || {});
+                
+                // Render table with employee-wise data grouped by date
+                renderTable(data.daily);
+            }
+
+            // Process daily data for chart
+            function processDailyData(dailyEntries) {
+                const selectedMonth = monthSelect.value;
+                let year, month;
+                
+                if (selectedMonth) {
+                    [year, month] = selectedMonth.split("-");
+                } else {
                     const now = new Date();
                     year = now.getFullYear();
-                    month = now.getMonth() + 1;
+                    month = (now.getMonth() + 1).toString().padStart(2, '0');
                 }
-                let daysInMonth = new Date(year, month, 0).getDate();
-                return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+                
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const labels = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
+                const values = new Array(daysInMonth).fill(0);
+                
+                // Sum hours for each day across all employees
+                dailyEntries.forEach(entry => {
+                    if (entry.date) {
+                        const day = new Date(entry.date).getDate();
+                        if (day >= 1 && day <= daysInMonth) {
+                            values[day - 1] += parseFloat(entry.hours) || 0;
+                        }
+                    }
+                });
+                
+                return { labels, values };
             }
 
             // Function to render bar chart for work summary
@@ -467,7 +503,7 @@
                     data: {
                         labels: dates,
                         datasets: [{
-                            label: "Total Work Hours",
+                            label: "Total Work Hours (All Employees)",
                             data: hours,
                             backgroundColor: "rgba(54, 162, 235, 0.5)",
                             borderColor: "rgba(54, 162, 235, 1)",
@@ -481,13 +517,7 @@
                             tooltip: {
                                 callbacks: {
                                     label: function (tooltipItem) {
-                                        let index = tooltipItem.dataIndex;
-                                        let date = dates[index];
-
-                                        let entry = rawData.find(e => new Date(e.date).getDate() == date);
-                                        if (!entry) return `Date: ${date} - No Data`;
-
-                                        return `📅 Date: ${date}\n📌 Project: ${entry.project}\n⏳ Hours: ${entry.hours.toFixed(2)} hrs`;
+                                        return `Total Hours: ${tooltipItem.raw.toFixed(2)} hrs`;
                                     }
                                 }
                             }
@@ -522,6 +552,11 @@
                 const ctx = canvas.getContext("2d");
                 if (projectChart) projectChart.destroy();
 
+                // If no project data
+                if (Object.keys(projectHours).length === 0) {
+                    projectHours = { "No Data": 1 };
+                }
+
                 // Generate colors for projects
                 const colors = [
                     "#FF6384", "#36A2EB", "#FFCE56", "#4CAF50", "#FF9800",
@@ -551,7 +586,7 @@
                                         const value = context.raw || 0;
                                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                         const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ${value} hours (${percentage}%)`;
+                                        return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
                                     }
                                 }
                             }
@@ -560,7 +595,7 @@
                 });
             }
 
-            // Function to render data table
+            // Function to render data table with date grouping and employee-wise data
             function renderTable(data) {
                 reportTableBody.innerHTML = "";
 
@@ -569,34 +604,99 @@
                     return;
                 }
 
-                let lastDate = "";
+                // Sort data by date (descending) and then by employee name
+                const sortedData = [...data].sort((a, b) => {
+                    const dateCompare = new Date(b.date) - new Date(a.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    
+                    const nameA = a.emp_name || employeeNames[a.emp_id] || '';
+                    const nameB = b.emp_name || employeeNames[b.emp_id] || '';
+                    return nameA.localeCompare(nameB);
+                });
 
-                data.forEach(entry => {
-                    let entryDate = formatDate(entry.date);
-                    if (entryDate !== lastDate) {
-                        let dateRow = document.createElement("tr");
-                        dateRow.innerHTML = `
-                            <td colspan="5" style="background-color: #f1f1f1; font-weight: bold; text-align: center;">
-                                ${entryDate}
+                let currentDate = '';
+                let dailyTotal = 0;
+                let dailyEntries = [];
+
+                // First pass: calculate daily totals
+                const dateTotals = {};
+                sortedData.forEach(entry => {
+                    if (entry.date) {
+                        const dateStr = formatDate(entry.date);
+                        if (!dateTotals[dateStr]) {
+                            dateTotals[dateStr] = 0;
+                        }
+                        dateTotals[dateStr] += parseFloat(entry.hours) || 0;
+                    }
+                });
+
+                // Second pass: render table with date headers and employee rows
+                sortedData.forEach((entry, index) => {
+                    const entryDate = formatDate(entry.date);
+                    const entryDateFull = entry.date;
+                    
+                    // Add date header if new date
+                    if (entryDate !== currentDate) {
+                        // Add daily total row for previous date if needed
+                        if (currentDate !== '') {
+                            addDailyTotalRow(currentDate, dateTotals[currentDate]);
+                        }
+                        
+                        // Add date header
+                        const dateHeader = document.createElement("tr");
+                        dateHeader.innerHTML = `
+                            <td colspan="5" class="date-header">
+                                📅 ${entryDate}
                             </td>
                         `;
-                        reportTableBody.appendChild(dateRow);
-                        lastDate = entryDate;
+                        reportTableBody.appendChild(dateHeader);
+                        currentDate = entryDate;
                     }
 
-                    let row = document.createElement("tr");
+                    // Add employee work entry row
+                    const row = document.createElement("tr");
+                    
+                    // Get employee name (from entry or mapping)
+                    const empName = entry.emp_name || employeeNames[entry.emp_id] || entry.emp_id || "Unknown Employee";
+                    
                     row.innerHTML = `
                         <td></td>
-                        <td>${entry.emp_name || entry.emp_id || "N/A"}</td>
+                        <td><span class="employee-name">${empName}</span></td>
                         <td>${entry.project || "Unknown Project"}</td>
                         <td>${entry.work_description || "N/A"}</td>
-                        <td>${entry.hours ? `${entry.hours.toFixed(2)} hrs` : "0 hrs"}</td>
+                        <td>${entry.hours ? `${parseFloat(entry.hours).toFixed(2)} hrs` : "0.00 hrs"}</td>
                     `;
                     reportTableBody.appendChild(row);
                 });
+
+                // Add daily total row for the last date
+                if (currentDate !== '') {
+                    addDailyTotalRow(currentDate, dateTotals[currentDate]);
+                }
+            }
+
+            // Helper function to add daily total row
+            function addDailyTotalRow(date, total) {
+                const totalRow = document.createElement("tr");
+                totalRow.style.backgroundColor = "#f8f9fa";
+                totalRow.innerHTML = `
+                    <td colspan="4" style="text-align: right; font-weight: 600; color: #007bff;">
+                        Daily Total Hours:
+                    </td>
+                    <td style="font-weight: 700; color: #28a745;">
+                        ${total.toFixed(2)} hrs
+                    </td>
+                `;
+                reportTableBody.appendChild(totalRow);
+                
+                // Add empty row for spacing
+                const spacerRow = document.createElement("tr");
+                spacerRow.innerHTML = `<td colspan="5" style="padding: 5px;"></td>`;
+                reportTableBody.appendChild(spacerRow);
             }
 
             function formatDate(dateStr) {
+                if (!dateStr) return "Unknown Date";
                 let date = new Date(dateStr);
                 return date.toLocaleDateString('en-US', { 
                     weekday: 'short', 
