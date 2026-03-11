@@ -191,7 +191,7 @@ exports.getSummary = async (req, res) => {
     try {
         let { emp_id, project_id, start_date, end_date, prev_month } = req.query;
 
-        // Adjust dates for previous month
+        // Adjust dates for previous month if requested
         if (prev_month === "true") {
             let today = new Date();
             let firstDayPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -201,37 +201,60 @@ exports.getSummary = async (req, res) => {
             end_date = lastDayPrevMonth.toISOString().slice(0, 10);
         }
 
-        // Fetch summary data
-        const { rows } = await projectModel.getTimeSummary(emp_id, project_id, start_date, end_date);
+        // Fetch summary data from database
+        const result = await projectModel.getTimeSummary(emp_id, project_id, start_date, end_date);
+        const rows = result.rows;
 
-        let summaryData = {}, projectSummary = {};
-        rows.forEach(entry => {
-            let dateKey = entry.date;
-            
-            // Aggregate daily summary
-            if (!summaryData[dateKey]) {
-                summaryData[dateKey] = {
-                    date: entry.date,
-                    emp_id: entry.emp_id,
-                    project: entry.project,
-                    work_description: entry.work_description,
-                    hours: 0
-                };
+        // Data structures for processing
+        let dailyEntries = [];
+        let projectSummary = {};
+        let employeeMap = {};
+
+        // First, fetch employee names for all emp_ids in the result
+        const empIds = [...new Set(rows.map(row => row.emp_id))];
+        
+        // Process each row
+        for (const row of rows) {
+            // Get employee name if not already in map
+            if (!employeeMap[row.emp_id]) {
+                try {
+                    const employee = await projectModel.findEmployee(row.emp_id);
+                    employeeMap[row.emp_id] = employee ? employee.name : row.emp_id;
+                } catch (err) {
+                    employeeMap[row.emp_id] = row.emp_id;
+                }
             }
-            summaryData[dateKey].hours += parseFloat(entry.hours);
+
+            // Create daily entry with all details
+            const dailyEntry = {
+                date: row.date,
+                emp_id: row.emp_id,
+                emp_name: employeeMap[row.emp_id],
+                project: row.project,
+                work_description: row.work_description,
+                hours: parseFloat(row.hours) || 0
+            };
+            
+            dailyEntries.push(dailyEntry);
 
             // Aggregate project-wise summary
-            if (!projectSummary[entry.project]) {
-                projectSummary[entry.project] = 0;
+            if (!projectSummary[row.project]) {
+                projectSummary[row.project] = 0;
             }
-            projectSummary[entry.project] += parseFloat(entry.hours);
-        });
+            projectSummary[row.project] += parseFloat(row.hours) || 0;
+        }
 
-        res.json({ daily: Object.values(summaryData), projectWise: projectSummary });
+        // Sort daily entries by date (descending) for better display
+        dailyEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.json({ 
+            daily: dailyEntries, 
+            projectWise: projectSummary 
+        });
 
     } catch (error) {
         console.error("Error fetching summary data:", error);
-        res.status(500).send("Error fetching summary data");
+        res.status(500).json({ error: "Error fetching summary data" });
     }
 };
 
