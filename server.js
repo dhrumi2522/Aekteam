@@ -1171,6 +1171,47 @@ app.get("/api/websitesales/campaigns", async (req, res) => {
 });
 
 
+app.post('/api/submit-feedback', async (req, res) => {
+  const { name, email, phone_no, subject, screen_id, comments } = req.body;
+
+  try {
+    // Validation
+    if (!name || !email || !phone_no || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, Email, Phone No and Subject are required'
+      });
+    }
+
+    // Insert feedback into database
+    const query = `
+      INSERT INTO feedback 
+      (name, email, phone_no, subject, screen_id, comments, created_at) 
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      RETURNING *;
+    `;
+
+    const values = [name, email, phone_no, subject, screen_id, comments];
+
+    const result = await db.query(query, values);
+
+    // Success response
+    res.status(201).json({
+      success: true,
+      message: 'Feedback submitted successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error occurred during feedback submission:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Error saving feedback',
+      error: error.message
+    });
+  }
+});
 
 
 
