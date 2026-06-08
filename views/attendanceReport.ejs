@@ -1,648 +1,857 @@
 <!-- attendanceReport.ejs -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Attendance Report</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #f0f4f8; font-family: 'Inter', sans-serif; }
-    .modal { display: none; }
-    .modal.active { display: flex; }
+    body {
+      background-color: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+    }
 
-    .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; letter-spacing: 0.02em; }
-    .badge-present  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .badge-absent   { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-    .badge-leave    { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
-    .badge-holiday  { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .badge-weekend  { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-    .badge-halfday  { background: #fef9c3; color: #92400e; border: 1px solid #fde68a; }
-    .badge-future   { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+    .modal {
+      display: none;
+    }
 
-    .card { background: white; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
-    .summary-card { border-radius: 12px; padding: 18px 14px; text-align: center; }
+    .modal.active {
+      display: flex;
+    }
 
-    .tab-btn { padding: 9px 22px; border-radius: 10px; font-weight: 500; font-size: 0.88rem; transition: all 0.2s; cursor: pointer; border: none; }
-    .tab-btn.active { background: #2563eb; color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
-    .tab-btn:not(.active) { background: #e2e8f0; color: #475569; }
-    .tab-btn:not(.active):hover { background: #cbd5e1; }
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
 
-    table thead th { font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 12px 16px; }
-    table tbody td { padding: 11px 16px; font-size: 0.875rem; }
+    .badge-present {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-absent {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .badge-leave {
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+    }
+
+    .badge-holiday {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-weekend {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-halfday {
+      background: #fef9c3;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-future {
+      background: #f8fafc;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .summary-card {
+      border-radius: 12px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+
+    .tab-btn {
+      padding: 9px 22px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .tab-btn:not(.active) {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .tab-btn:not(.active):hover {
+      background: #cbd5e1;
+    }
+
+    table thead th {
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+    }
+
+    table tbody td {
+      padding: 11px 16px;
+      font-size: 0.875rem;
+    }
 
     @media print {
-      .no-print { display: none !important; }
-      .main { margin-left: 0 !important; padding: 20px !important; }
+      .no-print {
+        display: none !important;
+      }
+
+      .main {
+        margin-left: 0 !important;
+        padding: 20px !important;
+      }
     }
   </style>
 </head>
+
 <body>
   <%- include('./partials/hrsidebar') %>
 
-  <div class="main p-6 ml-80">
+    <div class="main p-6 ml-80">
 
-    <!-- Page Header -->
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-800">📋 Attendance Report</h2>
-        <p class="text-gray-400 text-sm mt-0.5">Monthly calendar view & date-range reports for all employees</p>
-      </div>
-      <div class="flex gap-3 no-print">
-       
-        <button id="exportExcelBtn" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition shadow">
-          📊 Export Excel
-        </button>
-      </div>
-    </div>
+      <!-- Page Header -->
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">📋 Attendance Report</h2>
+          <p class="text-gray-400 text-sm mt-0.5">Monthly calendar view & date-range reports for all employees</p>
+        </div>
+        <div class="flex gap-3 no-print">
 
-    <!-- Tab Switcher -->
-    <div class="flex gap-3 mb-6 no-print">
-      <button class="tab-btn active" data-tab="monthly" onclick="switchTab('monthly', this)">📅 Monthly Report</button>
-      <button class="tab-btn" data-tab="range" onclick="switchTab('range', this)">📆 Date Range Report</button>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- TAB 1: MONTHLY REPORT                                            -->
-    <!-- ================================================================ -->
-    <div id="tab-monthly">
-
-      <!-- Filters -->
-      <div class="card p-5 mb-6 no-print">
-        <div class="flex flex-wrap gap-4 items-end">
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Employee</label>
-            <select id="m_emp_id" class="border border-gray-200 rounded-lg p-2.5 min-w-[220px] text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-              <option value="">— Select Employee —</option>
-              <option value="all">All Employees</option>
-              <% employees.forEach(emp => { %>
-                <option value="<%= emp.emp_id %>"><%= emp.name %></option>
-              <% }); %>
-            </select>
-          </div>
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Month</label>
-            <select id="m_month" class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-              <option value="1">January</option><option value="2">February</option>
-              <option value="3">March</option><option value="4">April</option>
-              <option value="5">May</option><option value="6">June</option>
-              <option value="7">July</option><option value="8">August</option>
-              <option value="9">September</option><option value="10">October</option>
-              <option value="11">November</option><option value="12">December</option>
-            </select>
-          </div>
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Year</label>
-            <select id="m_year" class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none"></select>
-          </div>
-          <button onclick="loadMonthlyReport()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium text-sm shadow transition">
-            Show Report
+          <button id="exportExcelBtn"
+            class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition shadow">
+            📊 Export Excel
           </button>
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div id="m_empty" class="card p-14 text-center">
-        <p class="text-5xl mb-3">📊</p>
-        <p class="text-lg font-medium text-gray-500">Select an employee (or All), month &amp; year</p>
-        <p class="text-sm text-gray-400 mt-1">The report will generate automatically</p>
+      <!-- Tab Switcher -->
+      <div class="flex gap-3 mb-6 no-print">
+        <button class="tab-btn active" data-tab="monthly" onclick="switchTab('monthly', this)">📅 Monthly
+          Report</button>
+        <button class="tab-btn" data-tab="range" onclick="switchTab('range', this)">📆 Date Range Report</button>
       </div>
 
-      <!-- Loading State -->
-      <div id="m_loading" class="hidden card p-14 text-center">
-        <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-        <p class="text-gray-500 text-sm">Fetching attendance data…</p>
-      </div>
+      <!-- ================================================================ -->
+      <!-- TAB 1: MONTHLY REPORT                                            -->
+      <!-- ================================================================ -->
+      <div id="tab-monthly">
 
-      <!-- Summary Cards -->
-      <div id="m_summary" class="hidden mb-6">
-
-        <!-- NOTE: These counts come DIRECTLY from server model status values -->
-        <!-- Present = server says "Present"                                   -->
-        <!-- Absent  = server says "Absent" (no punch + no approved leave)    -->
-        <!-- Leave   = server says "Taken Leave" (approved leave, full day)   -->
-        <!-- Half    = server says "Half Day (1st/2nd Half)"                  -->
-        <!-- Festival= server says "Festival Leave"                           -->
-        <!-- Weekend = server says "Official Leave"                           -->
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-          <div class="summary-card" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
-            <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Total Days</p>
-            <p class="text-3xl font-bold text-indigo-800" id="s_totalDays">0</p>
-            <p class="text-xs text-indigo-400 mt-1">in month</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)">
-            <p class="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Present</p>
-            <p class="text-3xl font-bold text-green-800" id="s_present">0</p>
-            <p class="text-xs text-green-400 mt-1">punched in + out</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">
-            <p class="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">Absent</p>
-            <p class="text-3xl font-bold text-red-700" id="s_absent">0</p>
-            <p class="text-xs text-red-400 mt-1">no punch, no leave</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fff7ed,#fed7aa)">
-            <p class="text-xs font-bold text-orange-700 uppercase tracking-wider mb-1">Leave Taken</p>
-            <p class="text-3xl font-bold text-orange-800" id="s_leave">0</p>
-            <p class="text-xs text-orange-400 mt-1">approved full day</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">
-            <p class="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-1">Half Days</p>
-            <p class="text-3xl font-bold text-yellow-800" id="s_half">0</p>
-            <p class="text-xs text-yellow-500 mt-1">approved half leave</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">
-            <p class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Festival</p>
-            <p class="text-3xl font-bold text-blue-800" id="s_festival">0</p>
-            <p class="text-xs text-blue-400 mt-1">public holiday</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0)">
-            <p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Weekend Off</p>
-            <p class="text-3xl font-bold text-slate-700" id="s_weekend">0</p>
-            <p class="text-xs text-slate-400 mt-1">sat/sun off</p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
-            <p class="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">Working Days</p>
-            <p class="text-3xl font-bold text-purple-800" id="s_workDays">0</p>
-            <p class="text-xs text-purple-400 mt-1">excl. weekends</p>
-          </div>
-          <div class="summary-card col-span-2" style="background:linear-gradient(135deg,#ecfdf5,#a7f3d0);border:2px solid #6ee7b7;">
-            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Available Leave Balance</p>
-            <p class="text-3xl font-bold text-emerald-800" id="s_leaveBalance">—</p>
-            <p class="text-xs text-emerald-600 mt-1">from employee record (live)</p>
-          </div>
-        </div>
-
-        <!-- Total Leave Count banner -->
-        <div id="s_leaveCountBanner" class="hidden card p-4 border-l-4 border-orange-400 bg-orange-50">
-          <div class="flex flex-wrap items-center gap-6">
-            <div>
-              <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Total Leave Count</p>
-              <p class="text-2xl font-bold text-orange-700" id="s_leaveCount">0</p>
+        <!-- Filters -->
+        <div class="card p-5 mb-6 no-print">
+          <div class="flex flex-wrap gap-4 items-end">
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Employee</label>
+              <select id="m_emp_id"
+                class="border border-gray-200 rounded-lg p-2.5 min-w-[220px] text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option value="">— Select Employee —</option>
+                <option value="all">All Employees</option>
+                <% employees.forEach(emp=> { %>
+                  <option value="<%= emp.emp_id %>">
+                    <%= emp.name %>
+                  </option>
+                  <% }); %>
+              </select>
             </div>
-            <div class="flex-1 text-xs text-gray-500 leading-6">
-              <span class="inline-block bg-orange-100 text-orange-700 px-2 py-0.5 rounded mr-1 font-medium">Taken Leave × 1</span> +
-              <span class="inline-block bg-red-100 text-red-600 px-2 py-0.5 rounded mx-1 font-medium">Absent (no punch) × 1</span> +
-              <span class="inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded mx-1 font-medium">Half Days × 0.5</span>
-              <br><span class="text-gray-400 mt-1 block">⚠️ Festival Leave &amp; Weekend Off are NOT counted in this total</span>
-              <span class="text-gray-400 block">✅ Absent (no punch, no approved leave) IS included — e.g. 3 Leave + 2 Absent = 5.0</span>
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Month</label>
+              <select id="m_month"
+                class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Year</label>
+              <select id="m_year"
+                class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none"></select>
+            </div>
+            <button onclick="loadMonthlyReport()"
+              class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium text-sm shadow transition">
+              Show Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="m_empty" class="card p-14 text-center">
+          <p class="text-5xl mb-3">📊</p>
+          <p class="text-lg font-medium text-gray-500">Select an employee (or All), month &amp; year</p>
+          <p class="text-sm text-gray-400 mt-1">The report will generate automatically</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="m_loading" class="hidden card p-14 text-center">
+          <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3">
+          </div>
+          <p class="text-gray-500 text-sm">Fetching attendance data…</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="m_summary" class="hidden mb-6">
+
+          <!-- NOTE: These counts come DIRECTLY from server model status values -->
+          <!-- Present = server says "Present"                                   -->
+          <!-- Absent  = server says "Absent" (no punch + no approved leave)    -->
+          <!-- Leave   = server says "Taken Leave" (approved leave, full day)   -->
+          <!-- Half    = server says "Half Day (1st/2nd Half)"                  -->
+          <!-- Festival= server says "Festival Leave"                           -->
+          <!-- Weekend = server says "Official Leave"                           -->
+
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+            <div class="summary-card" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+              <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Total Days</p>
+              <p class="text-3xl font-bold text-indigo-800" id="s_totalDays">0</p>
+              <p class="text-xs text-indigo-400 mt-1">in month</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)">
+              <p class="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Present</p>
+              <p class="text-3xl font-bold text-green-800" id="s_present">0</p>
+              <p class="text-xs text-green-400 mt-1">punched in + out</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">
+              <p class="text-xs font-bold text-red-600 uppercase tracking-wider mb-1">Absent</p>
+              <p class="text-3xl font-bold text-red-700" id="s_absent">0</p>
+              <p class="text-xs text-red-400 mt-1">no punch, no leave</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fff7ed,#fed7aa)">
+              <p class="text-xs font-bold text-orange-700 uppercase tracking-wider mb-1">Leave Taken</p>
+              <p class="text-3xl font-bold text-orange-800" id="s_leave">0</p>
+              <p class="text-xs text-orange-400 mt-1">approved full day</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">
+              <p class="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-1">Half Days</p>
+              <p class="text-3xl font-bold text-yellow-800" id="s_half">0</p>
+              <p class="text-xs text-yellow-500 mt-1">approved half leave</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">
+              <p class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Festival</p>
+              <p class="text-3xl font-bold text-blue-800" id="s_festival">0</p>
+              <p class="text-xs text-blue-400 mt-1">public holiday</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0)">
+              <p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Weekend Off</p>
+              <p class="text-3xl font-bold text-slate-700" id="s_weekend">0</p>
+              <p class="text-xs text-slate-400 mt-1">sat/sun off</p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
+              <p class="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">Working Days</p>
+              <p class="text-3xl font-bold text-purple-800" id="s_workDays">0</p>
+              <p class="text-xs text-purple-400 mt-1">excl. weekends</p>
+            </div>
+            <div class="summary-card col-span-2"
+              style="background:linear-gradient(135deg,#ecfdf5,#a7f3d0);border:2px solid #6ee7b7;">
+              <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Available Leave Balance</p>
+              <p class="text-3xl font-bold text-emerald-800" id="s_leaveBalance">—</p>
+              <p class="text-xs text-emerald-600 mt-1">from employee record (live)</p>
             </div>
           </div>
+
+          <!-- Total Leave Count banner -->
+          <div id="s_leaveCountBanner" class="hidden card p-4 border-l-4 border-orange-400 bg-orange-50">
+            <div class="flex flex-wrap items-center gap-6">
+              <div>
+                <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Total Leave Count</p>
+                <p class="text-2xl font-bold text-orange-700" id="s_leaveCount">0</p>
+              </div>
+              <div class="flex-1 text-xs text-gray-500 leading-6">
+                <span class="inline-block bg-orange-100 text-orange-700 px-2 py-0.5 rounded mr-1 font-medium">Taken
+                  Leave × 1</span> +
+                <span class="inline-block bg-red-100 text-red-600 px-2 py-0.5 rounded mx-1 font-medium">Absent (no
+                  punch) × 1</span> +
+                <span class="inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded mx-1 font-medium">Half Days
+                  × 0.5</span>
+                <br><span class="text-gray-400 mt-1 block">⚠️ Festival Leave &amp; Weekend Off are NOT counted in this
+                  total</span>
+                <span class="text-gray-400 block">✅ Absent (no punch, no approved leave) IS included — e.g. 3 Leave + 2
+                  Absent = 5.0</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-      </div>
-
-      <!-- Single Employee Daily Table -->
-      <div id="m_table_wrap" class="hidden card overflow-hidden">
-        <div class="px-5 py-4 border-b flex items-center justify-between bg-gray-50">
-          <h3 class="font-semibold text-gray-700" id="m_table_title">Daily Attendance</h3>
-          <span class="text-xs text-gray-400 bg-white border px-3 py-1 rounded-full" id="m_table_sub"></span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-              <tr>
-                <th class="text-left">Date</th>
-                <th class="text-center">Day</th>
-                <th class="text-center">Check In</th>
-                <th class="text-center">Check Out</th>
-                <th class="text-center">Working Hours</th>
-                <th class="text-center">Status</th>
-                <th class="text-center">Remark</th>
-              </tr>
-            </thead>
-            <tbody id="m_tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- All Employees Summary Table -->
-      <div id="m_all_table_wrap" class="hidden card overflow-hidden">
-        <div class="px-5 py-4 border-b flex items-center justify-between bg-gray-50">
-          <h3 class="font-semibold text-gray-700" id="m_all_title">All Employees — Monthly Summary</h3>
-          <span class="text-xs text-gray-400 bg-white border px-3 py-1 rounded-full" id="m_all_sub"></span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
-              <tr>
-                <th class="text-left">Employee</th>
-                <th class="text-center">Present</th>
-                <th class="text-center">Absent</th>
-                <th class="text-center">Leave Taken<br><span class="text-xs font-normal opacity-80">(full day)</span></th>
-                <th class="text-center">Half Days</th>
-                <th class="text-center">Festival</th>
-                <th class="text-center">Weekend Off</th>
-                <th class="text-center">Leave Balance</th>
-                <th class="text-center">Total Leave</th>
-              </tr>
-            </thead>
-            <tbody id="m_all_tbody"></tbody>
-          </table>
-        </div>
-        <!-- Grand Total Row -->
-        <div class="px-5 py-3 bg-gray-50 border-t flex flex-wrap gap-6 text-sm">
-          <span class="text-gray-500">Grand Total →</span>
-          <span class="text-green-700 font-semibold">Present: <strong id="gt_present">0</strong></span>
-          <span class="text-red-600 font-semibold">Absent: <strong id="gt_absent">0</strong></span>
-          <span class="text-orange-600 font-semibold">Leave: <strong id="gt_leave">0</strong></span>
-          <span class="text-yellow-600 font-semibold">Half Days: <strong id="gt_half">0</strong></span>
-          <span class="text-blue-600 font-semibold">Festival: <strong id="gt_festival">0</strong></span>
-          <span class="text-indigo-700 font-bold">Total Leave Count: <strong id="gt_leaveCount">0</strong></span>
-        </div>
-      </div>
-
-    </div><!-- /tab-monthly -->
-
-
-    <!-- ================================================================ -->
-    <!-- TAB 2: DATE RANGE REPORT (existing — completely untouched)       -->
-    <!-- ================================================================ -->
-    <div id="tab-range" class="hidden">
-
-      <form method="GET" action="/dashboard/hr/attendanceReport" class="card p-5 mb-6 no-print">
-        <div class="flex flex-wrap gap-4 items-end">
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Employee</label>
-            <select name="emp_id" id="r_emp_id" class="border border-gray-200 rounded-lg p-2.5 min-w-[220px] text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-              <option value="" disabled selected>Select Employee</option>
-              <option value="all" <%= filters.emp_id === 'all' ? 'selected' : '' %>>All Employees</option>
-              <% employees.forEach(emp => { %>
-                <option value="<%= emp.emp_id %>" <%= filters.emp_id == emp.emp_id ? 'selected' : '' %>><%= emp.name %></option>
-              <% }); %>
-            </select>
-          </div>
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Start Date</label>
-            <input type="date" name="start_date" value="<%= filters.start_date || '' %>" class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-          </div>
-          <div class="flex flex-col">
-            <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">End Date</label>
-            <input type="date" name="end_date" value="<%= filters.end_date || '' %>" class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-          </div>
-          <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium text-sm shadow transition">Show Report</button>
-        </div>
-      </form>
-
-      <% if (!isAllEmployees && summary) { %>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-5">
-          <div class="summary-card" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
-            <p class="text-xs font-bold text-indigo-600 mb-1">Total Days</p>
-            <p class="text-2xl font-bold text-indigo-800"><%= summary.totalDays %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)">
-            <p class="text-xs font-bold text-green-700 mb-1">Present</p>
-            <p class="text-2xl font-bold text-green-800"><%= summary.totalPresent %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">
-            <p class="text-xs font-bold text-red-600 mb-1">Absent</p>
-            <p class="text-2xl font-bold text-red-700"><%= summary.totalAbsent %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fff7ed,#fed7aa)">
-            <p class="text-xs font-bold text-orange-700 mb-1">Taken Leave</p>
-            <p class="text-2xl font-bold text-orange-800"><%= summary.totalTakenLeave || 0 %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">
-            <p class="text-xs font-bold text-yellow-700 mb-1">Half Days</p>
-            <p class="text-2xl font-bold text-yellow-800"><%= summary.totalHalfDays || 0 %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">
-            <p class="text-xs font-bold text-blue-700 mb-1">Festival</p>
-            <p class="text-2xl font-bold text-blue-800"><%= summary.totalFestival || 0 %></p>
-          </div>
-          <div class="summary-card" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0)">
-            <p class="text-xs font-bold text-slate-600 mb-1">Weekend Off</p>
-            <p class="text-2xl font-bold text-slate-700"><%= summary.totalOfficialLeave || 0 %></p>
-          </div>
-        </div>
-        <div class="card p-4 mb-5 border-l-4 border-orange-400 bg-orange-50">
-          <p class="text-orange-800 font-semibold text-sm">
-            Total Leave Count: <span class="text-2xl font-bold"><%= (summary.totalLeaveCount || 0).toFixed(1) %></span>
-            <span class="text-xs text-gray-500 ml-2">(Taken Leave + Absent + Half Days×0.5) — Festival &amp; Weekend NOT included</span>
-          </p>
-        </div>
-      <% } %>
-
-      <% if (!isAllEmployees && attendanceData && attendanceData.length > 0) { %>
-        <div class="card overflow-hidden mb-6">
-          <div class="px-5 py-4 border-b bg-gray-50">
-            <h3 class="font-semibold text-gray-700">Daily Attendance Detail</h3>
+        <!-- Single Employee Daily Table -->
+        <div id="m_table_wrap" class="hidden card overflow-hidden">
+          <div class="px-5 py-4 border-b flex items-center justify-between bg-gray-50">
+            <h3 class="font-semibold text-gray-700" id="m_table_title">Daily Attendance</h3>
+            <span class="text-xs text-gray-400 bg-white border px-3 py-1 rounded-full" id="m_table_sub"></span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                 <tr>
-                  <th class="text-left py-3 px-4">Date</th>
-                  <th class="text-center py-3 px-4">Day</th>
-                  <th class="text-center py-3 px-4">Punch In</th>
-                  <th class="text-center py-3 px-4">Punch Out</th>
-                  <th class="text-center py-3 px-4">Status</th>
+                  <th class="text-left">Date</th>
+                  <th class="text-center">Day</th>
+                  <th class="text-center">Check In</th>
+                  <th class="text-center">Check Out</th>
+                  <th class="text-center">Working Hours</th>
+                  <th class="text-center">Status</th>
+                  <th class="text-center">Remark</th>
                 </tr>
               </thead>
-              <tbody>
-                <% attendanceData.forEach((rec, i) => { %>
-                  <tr class="<%= i%2===0?'bg-white':'bg-gray-50' %> hover:bg-blue-50 transition-colors">
-                    <td class="py-3 px-4 text-gray-700 font-medium">
-                      <%= new Date(rec.date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) %>
-                    </td>
-                    <td class="py-3 px-4 text-center text-gray-500"><%= rec.day %></td>
-                    <td class="py-3 px-4 text-center text-gray-600">
-                      <%= rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—' %>
-                    </td>
-                    <td class="py-3 px-4 text-center text-gray-600">
-                      <%= rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—' %>
-                    </td>
-                    <td class="py-3 px-4 text-center">
-                      <%
-                        let bc = 'badge-absent';
-                        if (rec.status === 'Present') bc = 'badge-present';
-                        else if (rec.status && rec.status.includes('Half Day')) bc = 'badge-halfday';
-                        else if (rec.status === 'Official Leave') bc = 'badge-weekend';
-                        else if (rec.status === 'Taken Leave') bc = 'badge-leave';
-                        else if (rec.status === 'Festival Leave') bc = 'badge-holiday';
-                      %>
-                      <span class="badge <%= bc %>"><%= rec.status %></span>
-                    </td>
-                  </tr>
-                <% }); %>
-              </tbody>
+              <tbody id="m_tbody"></tbody>
             </table>
           </div>
         </div>
-      <% } %>
 
-      <% if (isAllEmployees && summary && summary.length > 0) { %>
-        <div class="card overflow-hidden">
-          <div class="px-5 py-4 border-b bg-gray-50">
-            <h3 class="font-semibold text-gray-700">All Employees — Summary</h3>
+        <!-- All Employees Summary Table -->
+        <div id="m_all_table_wrap" class="hidden card overflow-hidden">
+          <div class="px-5 py-4 border-b flex items-center justify-between bg-gray-50">
+            <h3 class="font-semibold text-gray-700" id="m_all_title">All Employees — Monthly Summary</h3>
+            <span class="text-xs text-gray-400 bg-white border px-3 py-1 rounded-full" id="m_all_sub"></span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
                 <tr>
-                  <th class="text-left py-3 px-4">Employee</th>
-                  <th class="text-center py-3 px-4">Present</th>
-                  <th class="text-center py-3 px-4">Absent</th>
-                  <th class="text-center py-3 px-4">Official Leave<br><span class="text-xs font-normal opacity-80">(Weekends)</span></th>
-                  <th class="text-center py-3 px-4">Taken Leave</th>
-                  <th class="text-center py-3 px-4">Half Days</th>
-                  <th class="text-center py-3 px-4">Festival</th>
-                  <th class="text-center py-3 px-4">Total Leave</th>
+                  <th class="text-left">Employee</th>
+                  <th class="text-center">Present</th>
+                  <th class="text-center">Absent</th>
+                  <th class="text-center">Leave Taken<br><span class="text-xs font-normal opacity-80">(full day)</span>
+                  </th>
+                  <th class="text-center">Half Days</th>
+                  <th class="text-center">Festival</th>
+                  <th class="text-center">Weekend Off</th>
+                  <th class="text-center">Leave Balance</th>
+                  <th class="text-center">Total Leave</th>
+                  <th class="text-center">Attendance Details</th>
                 </tr>
               </thead>
-              <tbody>
-                <% summary.forEach((s, i) => { %>
-                  <tr class="<%= i%2===0?'bg-white':'bg-gray-50' %> hover:bg-indigo-50 transition-colors emp-row cursor-pointer" data-empid="<%= s.emp_id %>">
-                    <td class="py-3 px-4 font-medium text-blue-600 hover:underline"><%= s.name %></td>
-                    <td class="py-3 px-4 text-center text-green-600 font-semibold"><%= s.totalPresent||0 %></td>
-                    <td class="py-3 px-4 text-center text-red-600 font-semibold"><%= s.totalAbsent||0 %></td>
-                    <td class="py-3 px-4 text-center text-slate-500 font-semibold"><%= s.totalOfficialLeave||0 %></td>
-                    <td class="py-3 px-4 text-center text-orange-600 font-semibold"><%= s.totalTakenLeave||0 %></td>
-                    <td class="py-3 px-4 text-center text-yellow-600 font-semibold"><%= s.totalHalfDays||0 %></td>
-                    <td class="py-3 px-4 text-center text-blue-500 font-semibold"><%= s.totalFestival||0 %></td>
-                    <td class="py-3 px-4 text-center text-indigo-700 font-bold text-base"><%= (s.totalLeaveCount||0).toFixed(1) %></td>
-                  </tr>
-                <% }); %>
-              </tbody>
+              <tbody id="m_all_tbody"></tbody>
             </table>
           </div>
+          <!-- Grand Total Row -->
+          <div class="px-5 py-3 bg-gray-50 border-t flex flex-wrap gap-6 text-sm">
+            <span class="text-gray-500">Grand Total →</span>
+            <span class="text-green-700 font-semibold">Present: <strong id="gt_present">0</strong></span>
+            <span class="text-red-600 font-semibold">Absent: <strong id="gt_absent">0</strong></span>
+            <span class="text-orange-600 font-semibold">Leave: <strong id="gt_leave">0</strong></span>
+            <span class="text-yellow-600 font-semibold">Half Days: <strong id="gt_half">0</strong></span>
+            <span class="text-blue-600 font-semibold">Festival: <strong id="gt_festival">0</strong></span>
+            <span class="text-indigo-700 font-bold">Total Leave Count: <strong id="gt_leaveCount">0</strong></span>
+          </div>
         </div>
-      <% } %>
 
-    </div><!-- /tab-range -->
+      </div><!-- /tab-monthly -->
 
-  </div><!-- /main -->
 
-  <!-- Modal: Leave Details -->
-  <div id="leaveModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 justify-center items-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
-      <h3 class="text-lg font-bold mb-4 text-blue-700">🗓️ Employee Leave Details</h3>
-      <table class="w-full border border-gray-200 rounded-lg mb-4 text-sm overflow-hidden">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="py-2 px-3 border-b text-left text-gray-500 font-semibold">Date</th>
-            <th class="py-2 px-3 border-b text-left text-gray-500 font-semibold">Type</th>
-          </tr>
-        </thead>
-        <tbody id="leaveTableBody"></tbody>
-      </table>
-      <button id="closeModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full text-sm font-medium transition">Close</button>
+      <!-- ================================================================ -->
+      <!-- TAB 2: DATE RANGE REPORT (existing — completely untouched)       -->
+      <!-- ================================================================ -->
+      <div id="tab-range" class="hidden">
+
+        <form method="GET" action="/dashboard/hr/attendanceReport" class="card p-5 mb-6 no-print">
+          <div class="flex flex-wrap gap-4 items-end">
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Employee</label>
+              <select name="emp_id" id="r_emp_id"
+                class="border border-gray-200 rounded-lg p-2.5 min-w-[220px] text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option value="" disabled selected>Select Employee</option>
+                <option value="all" <%=filters.emp_id==='all' ? 'selected' : '' %>>All Employees</option>
+                <% employees.forEach(emp=> { %>
+                  <option value="<%= emp.emp_id %>" <%=filters.emp_id==emp.emp_id ? 'selected' : '' %>><%= emp.name %>
+                  </option>
+                  <% }); %>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Start Date</label>
+              <input type="date" name="start_date" value="<%= filters.start_date || '' %>"
+                class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+            </div>
+            <div class="flex flex-col">
+              <label class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">End Date</label>
+              <input type="date" name="end_date" value="<%= filters.end_date || '' %>"
+                class="border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+            </div>
+            <button type="submit"
+              class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-medium text-sm shadow transition">Show
+              Report</button>
+          </div>
+        </form>
+
+        <% if (!isAllEmployees && summary) { %>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-5">
+            <div class="summary-card" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe)">
+              <p class="text-xs font-bold text-indigo-600 mb-1">Total Days</p>
+              <p class="text-2xl font-bold text-indigo-800">
+                <%= summary.totalDays %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)">
+              <p class="text-xs font-bold text-green-700 mb-1">Present</p>
+              <p class="text-2xl font-bold text-green-800">
+                <%= summary.totalPresent %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca)">
+              <p class="text-xs font-bold text-red-600 mb-1">Absent</p>
+              <p class="text-2xl font-bold text-red-700">
+                <%= summary.totalAbsent %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fff7ed,#fed7aa)">
+              <p class="text-xs font-bold text-orange-700 mb-1">Taken Leave</p>
+              <p class="text-2xl font-bold text-orange-800">
+                <%= summary.totalTakenLeave || 0 %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#fef9c3,#fde68a)">
+              <p class="text-xs font-bold text-yellow-700 mb-1">Half Days</p>
+              <p class="text-2xl font-bold text-yellow-800">
+                <%= summary.totalHalfDays || 0 %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe)">
+              <p class="text-xs font-bold text-blue-700 mb-1">Festival</p>
+              <p class="text-2xl font-bold text-blue-800">
+                <%= summary.totalFestival || 0 %>
+              </p>
+            </div>
+            <div class="summary-card" style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0)">
+              <p class="text-xs font-bold text-slate-600 mb-1">Weekend Off</p>
+              <p class="text-2xl font-bold text-slate-700">
+                <%= summary.totalOfficialLeave || 0 %>
+              </p>
+            </div>
+          </div>
+          <div class="card p-4 mb-5 border-l-4 border-orange-400 bg-orange-50">
+            <p class="text-orange-800 font-semibold text-sm">
+              Total Leave Count: <span class="text-2xl font-bold">
+                <%= (summary.totalLeaveCount || 0).toFixed(1) %>
+              </span>
+              <span class="text-xs text-gray-500 ml-2">(Taken Leave + Absent + Half Days×0.5) — Festival &amp; Weekend
+                NOT included</span>
+            </p>
+          </div>
+          <% } %>
+
+            <% if (!isAllEmployees && attendanceData && attendanceData.length> 0) { %>
+              <div class="card overflow-hidden mb-6">
+                <div class="px-5 py-4 border-b bg-gray-50">
+                  <h3 class="font-semibold text-gray-700">Daily Attendance Detail</h3>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                      <tr>
+                        <th class="text-left py-3 px-4">Date</th>
+                        <th class="text-center py-3 px-4">Day</th>
+                        <th class="text-center py-3 px-4">Punch In</th>
+                        <th class="text-center py-3 px-4">Punch Out</th>
+                        <th class="text-center py-3 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% attendanceData.forEach((rec, i)=> { %>
+                        <tr class="<%= i%2===0?'bg-white':'bg-gray-50' %> hover:bg-blue-50 transition-colors">
+                          <td class="py-3 px-4 text-gray-700 font-medium">
+                            <%= new Date(rec.date).toLocaleDateString('en-IN',
+                              {day:'2-digit',month:'short',year:'numeric'}) %>
+                          </td>
+                          <td class="py-3 px-4 text-center text-gray-500">
+                            <%= rec.day %>
+                          </td>
+                          <td class="py-3 px-4 text-center text-gray-600">
+                            <%= rec.punch_in_time ? new
+                              Date(rec.punch_in_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+                              : '—' %>
+                          </td>
+                          <td class="py-3 px-4 text-center text-gray-600">
+                            <%= rec.punch_out_time ? new
+                              Date(rec.punch_out_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+                              : '—' %>
+                          </td>
+                          <td class="py-3 px-4 text-center">
+                            <% let bc='badge-absent' ; if (rec.status==='Present' ) bc='badge-present' ; else if
+                              (rec.status && rec.status.includes('Half Day')) bc='badge-halfday' ; else if
+                              (rec.status==='Official Leave' ) bc='badge-weekend' ; else if (rec.status==='Taken Leave'
+                              ) bc='badge-leave' ; else if (rec.status==='Festival Leave' ) bc='badge-holiday' ; %>
+                              <span class="badge <%= bc %>">
+                                <%= rec.status %>
+                              </span>
+                          </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <% } %>
+
+                <% if (isAllEmployees && summary && summary.length> 0) { %>
+                  <div class="card overflow-hidden">
+                    <div class="px-5 py-4 border-b bg-gray-50">
+                      <h3 class="font-semibold text-gray-700">All Employees — Summary</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                      <table class="w-full">
+                        <thead class="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white">
+                          <tr>
+                            <th class="text-left py-3 px-4">Employee</th>
+                            <th class="text-center py-3 px-4">Present</th>
+                            <th class="text-center py-3 px-4">Absent</th>
+                            <th class="text-center py-3 px-4">Official Leave<br><span
+                                class="text-xs font-normal opacity-80">(Weekends)</span></th>
+                            <th class="text-center py-3 px-4">Taken Leave</th>
+                            <th class="text-center py-3 px-4">Half Days</th>
+                            <th class="text-center py-3 px-4">Festival</th>
+                            <th class="text-center py-3 px-4">Total Leave</th>
+                            <th class="text-center py-3 px-4">Attendance Details</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% summary.forEach((s, i)=> { %>
+                            <tr
+                              class="<%= i%2===0?'bg-white':'bg-gray-50' %> hover:bg-indigo-50 transition-colors emp-row cursor-pointer"
+                              data-empid="<%= s.emp_id %>">
+                              <td class="py-3 px-4 font-medium text-blue-600 hover:underline">
+                                <%= s.name %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-green-600 font-semibold">
+                                <%= s.totalPresent||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-red-600 font-semibold">
+                                <%= s.totalAbsent||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-slate-500 font-semibold">
+                                <%= s.totalOfficialLeave||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-orange-600 font-semibold">
+                                <%= s.totalTakenLeave||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-yellow-600 font-semibold">
+                                <%= s.totalHalfDays||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-blue-500 font-semibold">
+                                <%= s.totalFestival||0 %>
+                              </td>
+                              <td class="py-3 px-4 text-center text-indigo-700 font-bold text-base">
+                                <%= (s.totalLeaveCount||0).toFixed(1) %>
+                              </td>
+                              <td class="py-3 px-4 text-center">
+                                <button type="button"
+                                  onclick="event.stopPropagation(); showAttendanceDetailModal('<%= s.emp_id %>', '<%= s.name.replace(/'/g, `\\'`) %>')"
+                                  class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
+                                  Attendance Detail
+                                </button>
+                              </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <% } %>
+
+      </div><!-- /tab-range -->
+
+    </div><!-- /main -->
+
+    <!-- Modal: Leave Details -->
+    <div id="leaveModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 justify-center items-center z-50">
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative">
+        <h3 class="text-lg font-bold mb-4 text-blue-700">🗓️ Employee Leave Details</h3>
+        <table class="w-full border border-gray-200 rounded-lg mb-4 text-sm overflow-hidden">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="py-2 px-3 border-b text-left text-gray-500 font-semibold">Date</th>
+              <th class="py-2 px-3 border-b text-left text-gray-500 font-semibold">Type</th>
+            </tr>
+          </thead>
+          <tbody id="leaveTableBody"></tbody>
+        </table>
+        <button id="closeModal"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full text-sm font-medium transition">Close</button>
+      </div>
     </div>
-  </div>
 
-  <script>
-  // ================================================================
-  // CONSTANTS
-  // ================================================================
-  const MONTH_NAMES = ['','January','February','March','April','May','June',
-    'July','August','September','October','November','December'];
+    <!-- Modal: Attendance Details -->
+    <div id="attendanceDetailModal"
+      class="modal fixed inset-0 bg-gray-900 bg-opacity-50 justify-center items-center z-50 p-4">
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl relative flex flex-col" style="max-height: 85vh;">
+        <h3 class="text-lg font-bold mb-3 text-blue-700" id="attModalTitle">Attendance Details</h3>
+        <div class="overflow-y-auto mb-4 border border-gray-100 rounded-lg shadow-inner" style="max-height: 60vh;">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0 border-b border-gray-200">
+              <tr>
+                <th class="py-2.5 px-3 text-left text-gray-600 font-semibold uppercase tracking-wider text-xs">Date</th>
+                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Day
+                </th>
+                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Punch
+                  In</th>
+                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Punch
+                  Out</th>
+                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Status
+                </th>
+              </tr>
+            </thead>
+            <tbody id="attendanceDetailTableBody"></tbody>
+          </table>
+        </div>
+        <button id="closeAttendanceModal"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full text-sm font-medium transition shadow-md hover:shadow-lg">Close</button>
+      </div>
+    </div>
 
-  const pad = n => String(n).padStart(2, '0');
+    <script>
+      // ================================================================
+      // CONSTANTS
+      // ================================================================
+      const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
 
-  function daysInMonth(year, month) {
-    return new Date(year, month, 0).getDate();
-  }
+      const pad = n => String(n).padStart(2, '0');
 
-  // ================================================================
-  // STATUS COUNTING — THE SINGLE SOURCE OF TRUTH
-  // ================================================================
-  // We rely 100% on the STATUS that the server model already computed.
-  //
-  // Total Leave Count = Taken Leave + Absent + Half Days×0.5 + Festival
-  //   - Taken Leave : approved full-day leave
-  //   - Absent      : working day, no punch, no approved leave (also counted)
-  //   - Half Days   : approved half-day leave × 0.5
-  //   - Festival    : public holiday
-  //   - Weekend     : Official Leave — NOT included in total leave count
-  //
-  // Example: 3 approved leaves + 2 absent days → Total = 3 + 2 = 5
-
-  function countFromServerData(rows) {
-    // rows = array of { status, punch_in_time, punch_out_time, date, day, name, emp_id }
-    let present = 0, absent = 0, takenLeave = 0, halfDay = 0,
-        festival = 0, weekend = 0, workDays = 0;
-
-    rows.forEach(r => {
-      const s = r.status || '';
-
-      if (s === 'Official Leave') {
-        // Weekends only — NOT counted as working day or leave
-        weekend++;
-      } else {
-        // All non-weekend days = working days
-        workDays++;
-
-        if (s === 'Present') {
-          present++;
-        } else if (s === 'Absent') {
-          // Absent = working day with NO punch and NO approved leave
-          absent++;
-        } else if (s === 'Taken Leave') {
-          // Approved full-day leave
-          takenLeave++;
-        } else if (s.includes('Half Day')) {
-          // Approved half-day leave — counts as 0.5 leave
-          halfDay++;
-          // NOTE: half day also means they were present for half the day,
-          // but we count them separately from "Present" to avoid double count
-        } else if (s === 'Festival Leave') {
-          festival++;
-        }
+      function daysInMonth(year, month) {
+        return new Date(year, month, 0).getDate();
       }
-    });
 
-    // ✅ FORMULA: Total Leave Count = Taken Leave + Absent (no-punch) + Half Days×0.5
-    // Festival Leave is shown separately — NOT included in total leave count
-    // Weekend Off (Official Leave) — NOT included
-    // Example: 3 Taken Leave + 2 Absent + 0 Half = 5.0
-    const totalLeaveCount = takenLeave + absent + (halfDay * 0.5);
+      // ================================================================
+      // STATUS COUNTING — THE SINGLE SOURCE OF TRUTH
+      // ================================================================
+      // We rely 100% on the STATUS that the server model already computed.
+      //
+      // Total Leave Count = Taken Leave + Absent + Half Days×0.5 + Festival
+      //   - Taken Leave : approved full-day leave
+      //   - Absent      : working day, no punch, no approved leave (also counted)
+      //   - Half Days   : approved half-day leave × 0.5
+      //   - Festival    : public holiday
+      //   - Weekend     : Official Leave — NOT included in total leave count
+      //
+      // Example: 3 approved leaves + 2 absent days → Total = 3 + 2 = 5
 
-    return { present, absent, takenLeave, halfDay, festival, weekend, workDays, totalLeaveCount };
-  }
+      function countFromServerData(rows) {
+        // rows = array of { status, punch_in_time, punch_out_time, date, day, name, emp_id }
+        let present = 0, absent = 0, takenLeave = 0, halfDay = 0,
+          festival = 0, weekend = 0, workDays = 0;
 
-  // ================================================================
-  // HELPERS
-  // ================================================================
-function fmtTime(timeStr) {
-  if (!timeStr) return '—';
+        rows.forEach(r => {
+          const s = r.status || '';
 
-  const date = new Date(timeStr);
+          if (s === 'Official Leave') {
+            // Weekends only — NOT counted as working day or leave
+            weekend++;
+          } else {
+            // All non-weekend days = working days
+            workDays++;
 
-  return date.toLocaleTimeString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-}
+            if (s === 'Present') {
+              present++;
+            } else if (s === 'Absent') {
+              // Absent = working day with NO punch and NO approved leave
+              absent++;
+            } else if (s === 'Taken Leave') {
+              // Approved full-day leave
+              takenLeave++;
+            } else if (s.includes('Half Day Paid')) {
+              // Paid half-day leave counts as 0.5 absent
+              absent += 0.5;
+            } else if (s.includes('Half Day')) {
+              // Approved half-day leave — counts as 0.5 leave
+              halfDay++;
+              // NOTE: half day also means they were present for half the day,
+              // but we count them separately from "Present" to avoid double count
+            } else if (s === 'Festival Leave') {
+              festival++;
+            }
+          }
+        });
 
-  function workingHours(inTs, outTs) {
-    if (!inTs || !outTs) return '—';
-    try {
-      const diff = (new Date(outTs) - new Date(inTs)) / 3600000;
-      if (diff <= 0) return '—';
-      const h = Math.floor(diff);
-      const m = Math.round((diff - h) * 60);
-      return `${h}h ${m}m`;
-    } catch(e) { return '—'; }
-  }
+        // ✅ FORMULA: Total Leave Count = Taken Leave + Absent (no-punch) + Half Days×0.5
+        // Festival Leave is shown separately — NOT included in total leave count
+        // Weekend Off (Official Leave) — NOT included
+        // Example: 3 Taken Leave + 2 Absent + 0 Half = 5.0
+        const totalLeaveCount = takenLeave + absent + (halfDay * 0.5);
 
-  function getBadge(status) {
-    if (!status || status === '—') return `<span class="text-gray-300 text-xs italic">upcoming</span>`;
-    let cls = 'badge-absent';
-    if (status === 'Present')           cls = 'badge-present';
-    else if (status.includes('Half'))   cls = 'badge-halfday';
-    else if (status === 'Official Leave') cls = 'badge-weekend';
-    else if (status === 'Taken Leave')  cls = 'badge-leave';
-    else if (status === 'Festival Leave') cls = 'badge-holiday';
-    return `<span class="badge ${cls}">${status}</span>`;
-  }
+        return { present, absent, takenLeave, halfDay, festival, weekend, workDays, totalLeaveCount };
+      }
 
-  // Remark column — gives context for each status
-  function getRemark(row) {
-    const s = row.status || '';
-    if (s === 'Present')           return `<span class="text-green-600 text-xs">✅ Punched in/out</span>`;
-    if (s === 'Absent')            return `<span class="text-red-500 text-xs">❌ No punch, no leave</span>`;
-    if (s === 'Taken Leave')       return `<span class="text-orange-500 text-xs">📋 Approved leave</span>`;
-    if (s.includes('Half Day'))    return `<span class="text-yellow-600 text-xs">⏰ Half day leave</span>`;
-    if (s === 'Festival Leave')    return `<span class="text-blue-500 text-xs">🎉 Public holiday</span>`;
-    if (s === 'Official Leave')    return `<span class="text-slate-400 text-xs">📅 Weekend off</span>`;
-    return '—';
-  }
+      // ================================================================
+      // HELPERS
+      // ================================================================
+      function fmtTime(timeStr) {
+        if (!timeStr) return '—';
 
-  // ================================================================
-  // TAB SWITCHING
-  // ================================================================
-  function switchTab(tab, btn) {
-    document.getElementById('tab-monthly').classList.add('hidden');
-    document.getElementById('tab-range').classList.add('hidden');
-    document.getElementById('tab-' + tab).classList.remove('hidden');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
+        const date = new Date(timeStr);
+
+        return date.toLocaleTimeString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+
+      function workingHours(inTs, outTs) {
+        if (!inTs || !outTs) return '—';
+        try {
+          const diff = (new Date(outTs) - new Date(inTs)) / 3600000;
+          if (diff <= 0) return '—';
+          const h = Math.floor(diff);
+          const m = Math.round((diff - h) * 60);
+          return `${h}h ${m}m`;
+        } catch (e) { return '—'; }
+      }
+
+      function getBadge(status) {
+        if (!status || status === '—') return `<span class="text-gray-300 text-xs italic">upcoming</span>`;
+        let cls = 'badge-absent';
+        if (status === 'Present') cls = 'badge-present';
+        else if (status.includes('Half')) cls = 'badge-halfday';
+        else if (status === 'Official Leave') cls = 'badge-weekend';
+        else if (status === 'Taken Leave') cls = 'badge-leave';
+        else if (status === 'Festival Leave') cls = 'badge-holiday';
+        return `<span class="badge ${cls}">${status}</span>`;
+      }
+
+      // Remark column — gives context for each status
+      function getRemark(row) {
+        const s = row.status || '';
+        if (s === 'Present') return `<span class="text-green-600 text-xs">✅ Punched in/out</span>`;
+        if (s === 'Absent') return `<span class="text-red-500 text-xs">❌ No punch, no leave</span>`;
+        if (s === 'Taken Leave') return `<span class="text-orange-500 text-xs">📋 Approved leave</span>`;
+        if (s.includes('Half Day')) return `<span class="text-yellow-600 text-xs">⏰ Half day leave</span>`;
+        if (s === 'Festival Leave') return `<span class="text-blue-500 text-xs">🎉 Public holiday</span>`;
+        if (s === 'Official Leave') return `<span class="text-slate-400 text-xs">📅 Weekend off</span>`;
+        return '—';
+      }
+
+      // ================================================================
+      // TAB SWITCHING
+      // ================================================================
+      function switchTab(tab, btn) {
+        document.getElementById('tab-monthly').classList.add('hidden');
+        document.getElementById('tab-range').classList.add('hidden');
+        document.getElementById('tab-' + tab).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
 
   // If server returned range data → auto switch to range tab
-  <% if (filters && (filters.emp_id || filters.start_date)) { %>
-  (function() {
-    const rangeBtn = document.querySelector('[data-tab="range"]');
-    if (rangeBtn) switchTab('range', rangeBtn);
-  })();
-  <% } %>
-
-  // ================================================================
-  // INIT: Year dropdown + defaults
-  // ================================================================
-  (function initFilters() {
-    const yearSel = document.getElementById('m_year');
-    const now = new Date();
-    for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
-      const opt = document.createElement('option');
-      opt.value = y; opt.textContent = y;
-      yearSel.appendChild(opt);
-    }
-    yearSel.value = now.getFullYear();
-    document.getElementById('m_month').value = now.getMonth() + 1;
-  })();
-
-  // ================================================================
-  // RENDER SUMMARY CARDS (shared by single + all-emp)
-  // ================================================================
-  function renderSummaryCards(counts, totalDaysInMonth, leaveBalance) {
-    document.getElementById('s_totalDays').textContent    = totalDaysInMonth;
-    document.getElementById('s_present').textContent      = counts.present;
-    document.getElementById('s_absent').textContent       = counts.absent;
-    document.getElementById('s_leave').textContent        = counts.takenLeave;
-    document.getElementById('s_half').textContent         = counts.halfDay;
-    document.getElementById('s_festival').textContent     = counts.festival;
-    document.getElementById('s_weekend').textContent      = counts.weekend;
-    document.getElementById('s_workDays').textContent     = counts.workDays;
-    document.getElementById('s_leaveBalance').textContent = (leaveBalance !== undefined && leaveBalance !== null) ? leaveBalance : '—';
-    document.getElementById('s_leaveCount').textContent   = counts.totalLeaveCount.toFixed(1);
-
-    document.getElementById('m_summary').classList.remove('hidden');
-    document.getElementById('s_leaveCountBanner').classList.remove('hidden');
+  const hasRangeFilters = '<%= (typeof filters !== "undefined" && filters && (filters.emp_id || filters.start_date)) ? "true" : "false" %>';
+  if (hasRangeFilters === 'true') {
+    (function () {
+      const rangeBtn = document.querySelector('[data-tab="range"]');
+      if (rangeBtn) switchTab('range', rangeBtn);
+    })();
   }
 
-  // ================================================================
-  // SINGLE EMPLOYEE MONTHLY REPORT
-  // ================================================================
-  async function buildSingleEmployee(empId, year, month) {
-    const total = daysInMonth(year, month);
-    const startDate = `${year}-${pad(month)}-01`;
-    const endDate   = `${year}-${pad(month)}-${pad(total)}`;
+        // ================================================================
+        // INIT: Year dropdown + defaults
+        // ================================================================
+        (function initFilters() {
+          const yearSel = document.getElementById('m_year');
+          const now = new Date();
+          for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            yearSel.appendChild(opt);
+          }
+          yearSel.value = now.getFullYear();
+          document.getElementById('m_month').value = now.getMonth() + 1;
+        })();
 
-    // Fetch attendance (existing model) + leave balance — parallel
-    const [attRes, balRes] = await Promise.all([
-      fetch(`/dashboard/hr/attendanceReport?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}&json=1`)
-        .then(r => r.json())
-        .catch(() => ({ success: false, attendanceData: [] })),
-      fetch(`/dashboard/hr/employeeLeaveBalance?emp_id=${empId}`)
-        .then(r => r.json())
-        .catch(() => ({ leave_balance: '—' }))
-    ]);
+      // ================================================================
+      // RENDER SUMMARY CARDS (shared by single + all-emp)
+      // ================================================================
+      function renderSummaryCards(counts, totalDaysInMonth, leaveBalance) {
+        document.getElementById('s_totalDays').textContent = totalDaysInMonth;
+        document.getElementById('s_present').textContent = counts.present;
+        document.getElementById('s_absent').textContent = counts.absent;
+        document.getElementById('s_leave').textContent = counts.takenLeave;
+        document.getElementById('s_half').textContent = counts.halfDay;
+        document.getElementById('s_festival').textContent = counts.festival;
+        document.getElementById('s_weekend').textContent = counts.weekend;
+        document.getElementById('s_workDays').textContent = counts.workDays;
+        document.getElementById('s_leaveBalance').textContent = (leaveBalance !== undefined && leaveBalance !== null) ? leaveBalance : '—';
+        document.getElementById('s_leaveCount').textContent = counts.totalLeaveCount.toFixed(1);
 
-    // The server already returns one row per calendar day with the correct status
-    const rows = attRes.success ? (attRes.attendanceData || []) : [];
+        document.getElementById('m_summary').classList.remove('hidden');
+        document.getElementById('s_leaveCountBanner').classList.remove('hidden');
+      }
 
-    // ✅ Count everything from server statuses — no client-side overrides
-    const counts = countFromServerData(rows);
+      // ================================================================
+      // SINGLE EMPLOYEE MONTHLY REPORT
+      // ================================================================
+      async function buildSingleEmployee(empId, year, month) {
+        const total = daysInMonth(year, month);
+        const startDate = `${year}-${pad(month)}-01`;
+        const endDate = `${year}-${pad(month)}-${pad(total)}`;
 
-    renderSummaryCards(counts, total, balRes.leave_balance);
+        // Fetch attendance (existing model) + leave balance — parallel
+        const [attRes, balRes] = await Promise.all([
+          fetch(`/dashboard/hr/attendanceReport?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}&json=1`)
+            .then(r => r.json())
+            .catch(() => ({ success: false, attendanceData: [] })),
+          fetch(`/dashboard/hr/employeeLeaveBalance?emp_id=${empId}`)
+            .then(r => r.json())
+            .catch(() => ({ leave_balance: '—' }))
+        ]);
 
-    // Render daily table
-    const tbody = document.getElementById('m_tbody');
-    tbody.innerHTML = '';
+        // The server already returns one row per calendar day with the correct status
+        const rows = attRes.success ? (attRes.attendanceData || []) : [];
 
-    if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 text-sm">No attendance data found for this period</td></tr>`;
-    } else {
-      // Sort by date ascending
-      rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+        // ✅ Count everything from server statuses — no client-side overrides
+        const counts = countFromServerData(rows);
 
-      rows.forEach((row, i) => {
-        const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-        const dateStr = new Date(row.date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-        const dayName = row.day || '';
-        tbody.innerHTML += `
+        renderSummaryCards(counts, total, balRes.leave_balance);
+
+        // Render daily table
+        const tbody = document.getElementById('m_tbody');
+        tbody.innerHTML = '';
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 text-sm">No attendance data found for this period</td></tr>`;
+        } else {
+          // Sort by date ascending
+          rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          rows.forEach((row, i) => {
+            const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            const dateStr = new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const dayName = row.day || '';
+            tbody.innerHTML += `
           <tr class="${bg} hover:bg-blue-50 transition-colors">
             <td class="text-gray-700 font-medium">${dateStr}</td>
             <td class="text-center text-gray-400 text-xs font-medium">${dayName}</td>
@@ -652,99 +861,100 @@ function fmtTime(timeStr) {
             <td class="text-center">${getBadge(row.status)}</td>
             <td class="text-center">${getRemark(row)}</td>
           </tr>`;
-      });
-    }
+          });
+        }
 
-    document.getElementById('m_table_title').textContent = `Daily Attendance — ${MONTH_NAMES[month]} ${year}`;
-    document.getElementById('m_table_sub').textContent   = `${total} days`;
-    document.getElementById('m_table_wrap').classList.remove('hidden');
-    document.getElementById('m_all_table_wrap').classList.add('hidden');
-  }
-
-  // ================================================================
-  // ALL EMPLOYEES MONTHLY REPORT
-  // ================================================================
-  async function buildAllEmployees(year, month) {
-    const total = daysInMonth(year, month);
-    const startDate = `${year}-${pad(month)}-01`;
-    const endDate   = `${year}-${pad(month)}-${pad(total)}`;
-
-    // Single fetch for all employees — existing model handles it
-    const attRes = await fetch(
-      `/dashboard/hr/attendanceReport?emp_id=all&start_date=${startDate}&end_date=${endDate}&json=1`
-    ).then(r => r.json()).catch(() => ({ success: false, attendanceData: [] }));
-
-    const allRows = attRes.success ? (attRes.attendanceData || []) : [];
-
-    // Group rows by emp_id
-    const empGroups = {};
-    allRows.forEach(row => {
-      if (!empGroups[row.emp_id]) {
-        empGroups[row.emp_id] = { name: row.name, rows: [] };
+        document.getElementById('m_table_title').textContent = `Daily Attendance — ${MONTH_NAMES[month]} ${year}`;
+        document.getElementById('m_table_sub').textContent = `${total} days`;
+        document.getElementById('m_table_wrap').classList.remove('hidden');
+        document.getElementById('m_all_table_wrap').classList.add('hidden');
       }
-      empGroups[row.emp_id].rows.push(row);
-    });
 
-    const empIds = Object.keys(empGroups);
+      // ================================================================
+      // ALL EMPLOYEES MONTHLY REPORT
+      // ================================================================
+      async function buildAllEmployees(year, month) {
+        const total = daysInMonth(year, month);
+        const startDate = `${year}-${pad(month)}-01`;
+        const endDate = `${year}-${pad(month)}-${pad(total)}`;
 
-    // Fetch leave balances for all employees in parallel
-    const balResults = await Promise.all(
-      empIds.map(id =>
-        fetch(`/dashboard/hr/employeeLeaveBalance?emp_id=${id}`)
-          .then(r => r.json())
-          .catch(() => ({ leave_balance: '—' }))
-      )
-    );
-    const balMap = {};
-    empIds.forEach((id, idx) => { balMap[id] = balResults[idx].leave_balance; });
+        // Single fetch for all employees — existing model handles it
+        const attRes = await fetch(
+          `/dashboard/hr/attendanceReport?emp_id=all&start_date=${startDate}&end_date=${endDate}&json=1`
+        ).then(r => r.json()).catch(() => ({ success: false, attendanceData: [] }));
 
-    // Calculate per-employee counts using countFromServerData
-    const summaryRows = empIds.map(empId => {
-      const grp = empGroups[empId];
-      // ✅ countFromServerData reads server-assigned statuses — no re-derivation
-      const counts = countFromServerData(grp.rows);
-      return {
-        emp_id: empId,
-        name: grp.name,
-        leaveBalance: balMap[empId] !== undefined ? balMap[empId] : '—',
-        ...counts
-      };
-    });
+        const allRows = attRes.success ? (attRes.attendanceData || []) : [];
 
-    // Sort by name
-    summaryRows.sort((a, b) => a.name.localeCompare(b.name));
+        // Group rows by emp_id
+        const empGroups = {};
+        allRows.forEach(row => {
+          if (!empGroups[row.emp_id]) {
+            empGroups[row.emp_id] = { name: row.name, rows: [] };
+          }
+          empGroups[row.emp_id].rows.push(row);
+        });
 
-    // Grand totals
-    const grand = summaryRows.reduce((acc, r) => {
-      acc.present      += r.present;
-      acc.absent       += r.absent;
-      acc.takenLeave   += r.takenLeave;
-      acc.halfDay      += r.halfDay;
-      acc.festival     += r.festival;
-      acc.totalLeaveCount += r.totalLeaveCount;
-      return acc;
-    }, { present:0, absent:0, takenLeave:0, halfDay:0, festival:0, totalLeaveCount:0 });
 
-    // Top summary shows totals across all employees
-    renderSummaryCards({
-      present: grand.present, absent: grand.absent,
-      takenLeave: grand.takenLeave, halfDay: grand.halfDay,
-      festival: grand.festival, weekend: 0, workDays: 0,
-      totalLeaveCount: grand.totalLeaveCount
-    }, total, null);
+        const empIds = Object.keys(empGroups);
 
-    // Render table
-    const tbody = document.getElementById('m_all_tbody');
-    tbody.innerHTML = '';
+        // Fetch leave balances for all employees in parallel
+        const balResults = await Promise.all(
+          empIds.map(id =>
+            fetch(`/dashboard/hr/employeeLeaveBalance?emp_id=${id}`)
+              .then(r => r.json())
+              .catch(() => ({ leave_balance: '—' }))
+          )
+        );
+        const balMap = {};
+        empIds.forEach((id, idx) => { balMap[id] = balResults[idx].leave_balance; });
 
-    if (summaryRows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 text-sm">No employee data found</td></tr>`;
-    } else {
-      summaryRows.forEach((row, i) => {
-        const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-        // Colour code absent: highlight if > 3 absents
-        const absentStyle = row.absent > 3 ? 'color:#b91c1c;font-weight:700;' : 'color:#dc2626;font-weight:600;';
-        tbody.innerHTML += `
+        // Calculate per-employee counts using countFromServerData
+        const summaryRows = empIds.map(empId => {
+          const grp = empGroups[empId];
+          // ✅ countFromServerData reads server-assigned statuses — no re-derivation
+          const counts = countFromServerData(grp.rows);
+          return {
+            emp_id: empId,
+            name: grp.name,
+            leaveBalance: balMap[empId] !== undefined ? balMap[empId] : '—',
+            ...counts
+          };
+        });
+
+        // Sort by name
+        summaryRows.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Grand totals
+        const grand = summaryRows.reduce((acc, r) => {
+          acc.present += r.present;
+          acc.absent += r.absent;
+          acc.takenLeave += r.takenLeave;
+          acc.halfDay += r.halfDay;
+          acc.festival += r.festival;
+          acc.totalLeaveCount += r.totalLeaveCount;
+          return acc;
+        }, { present: 0, absent: 0, takenLeave: 0, halfDay: 0, festival: 0, totalLeaveCount: 0 });
+
+        // Top summary shows totals across all employees
+        renderSummaryCards({
+          present: grand.present, absent: grand.absent,
+          takenLeave: grand.takenLeave, halfDay: grand.halfDay,
+          festival: grand.festival, weekend: 0, workDays: 0,
+          totalLeaveCount: grand.totalLeaveCount
+        }, total, null);
+
+        // Render table
+        const tbody = document.getElementById('m_all_tbody');
+        tbody.innerHTML = '';
+
+        if (summaryRows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-gray-400 text-sm">No employee data found</td></tr>`;
+        } else {
+          summaryRows.forEach((row, i) => {
+            const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            // Colour code absent: highlight if > 3 absents
+            const absentStyle = row.absent > 3 ? 'color:#b91c1c;font-weight:700;' : 'color:#dc2626;font-weight:600;';
+            tbody.innerHTML += `
           <tr class="${bg} hover:bg-indigo-50 transition-colors">
             <td class="py-3 px-4 font-medium text-blue-700">${row.name}</td>
             <td class="py-3 px-4 text-center text-green-600 font-semibold">${row.present}</td>
@@ -755,116 +965,205 @@ function fmtTime(timeStr) {
             <td class="py-3 px-4 text-center text-slate-400 font-semibold">${row.weekend}</td>
             <td class="py-3 px-4 text-center text-emerald-600 font-semibold">${row.leaveBalance}</td>
             <td class="py-3 px-4 text-center text-indigo-700 font-bold text-base">${row.totalLeaveCount.toFixed(1)}</td>
+            <td class="py-3 px-4 text-center">
+              <button type="button" onclick="showAttendanceDetailModal('${row.emp_id}', '${row.name.replace(/'/g, "\\'")}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
+                 Attendance Detail
+              </button>
+            </td>
           </tr>`;
-      });
-    }
+          });
+        }
 
-    // Grand total row
-    document.getElementById('gt_present').textContent    = grand.present;
-    document.getElementById('gt_absent').textContent     = grand.absent;
-    document.getElementById('gt_leave').textContent      = grand.takenLeave;
-    document.getElementById('gt_half').textContent       = grand.halfDay;
-    document.getElementById('gt_festival').textContent   = grand.festival;
-    document.getElementById('gt_leaveCount').textContent = grand.totalLeaveCount.toFixed(1);
+        // Grand total row
+        document.getElementById('gt_present').textContent = grand.present;
+        document.getElementById('gt_absent').textContent = grand.absent;
+        document.getElementById('gt_leave').textContent = grand.takenLeave;
+        document.getElementById('gt_half').textContent = grand.halfDay;
+        document.getElementById('gt_festival').textContent = grand.festival;
+        document.getElementById('gt_leaveCount').textContent = grand.totalLeaveCount.toFixed(1);
 
-    document.getElementById('m_all_title').textContent = `All Employees — ${MONTH_NAMES[month]} ${year}`;
-    document.getElementById('m_all_sub').textContent   = `${summaryRows.length} employees`;
-    document.getElementById('m_all_table_wrap').classList.remove('hidden');
-    document.getElementById('m_table_wrap').classList.add('hidden');
-  }
-
-  // ================================================================
-  // MAIN: Load Monthly Report
-  // ================================================================
-  async function loadMonthlyReport() {
-    const empId = document.getElementById('m_emp_id').value;
-    const month = parseInt(document.getElementById('m_month').value);
-    const year  = parseInt(document.getElementById('m_year').value);
-
-    if (!empId) { alert('Please select an employee or "All Employees"'); return; }
-
-    // Show loading
-    document.getElementById('m_empty').classList.add('hidden');
-    document.getElementById('m_loading').classList.remove('hidden');
-    document.getElementById('m_summary').classList.add('hidden');
-    document.getElementById('s_leaveCountBanner').classList.add('hidden');
-    document.getElementById('m_table_wrap').classList.add('hidden');
-    document.getElementById('m_all_table_wrap').classList.add('hidden');
-
-    try {
-      if (empId === 'all') {
-        await buildAllEmployees(year, month);
-      } else {
-        await buildSingleEmployee(empId, year, month);
+        document.getElementById('m_all_title').textContent = `All Employees — ${MONTH_NAMES[month]} ${year}`;
+        document.getElementById('m_all_sub').textContent = `${summaryRows.length} employees`;
+        document.getElementById('m_all_table_wrap').classList.remove('hidden');
+        document.getElementById('m_table_wrap').classList.add('hidden');
       }
-    } catch (err) {
-      console.error('Monthly report error:', err);
-      alert('Failed to load report. Check console for details.');
-    } finally {
-      document.getElementById('m_loading').classList.add('hidden');
-    }
-  }
 
-  // ================================================================
-  // EXPORT EXCEL
-  // ================================================================
-  document.getElementById("exportExcelBtn").addEventListener("click", function () {
-    const activeTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
-    let empId, startDate, endDate;
+      // ================================================================
+      // MAIN: Load Monthly Report
+      // ================================================================
+      async function loadMonthlyReport() {
+        const empId = document.getElementById('m_emp_id').value;
+        const month = parseInt(document.getElementById('m_month').value);
+        const year = parseInt(document.getElementById('m_year').value);
 
-    if (activeTab === 'monthly') {
-      empId = document.getElementById('m_emp_id').value;
-      const month = parseInt(document.getElementById('m_month').value);
-      const year  = parseInt(document.getElementById('m_year').value);
-      if (!empId) { alert('Please select employee and month first'); return; }
-      const total = daysInMonth(year, month);
-      startDate = `${year}-${pad(month)}-01`;
-      endDate   = `${year}-${pad(month)}-${pad(total)}`;
-    } else {
-      empId     = document.getElementById("r_emp_id").value;
-      startDate = document.querySelector("[name='start_date']").value;
-      endDate   = document.querySelector("[name='end_date']").value;
-    }
+        if (!empId) { alert('Please select an employee or "All Employees"'); return; }
 
-    if (!empId || !startDate || !endDate) {
-      alert("Please select employee and date range!");
-      return;
-    }
-    window.location.href = `/dashboard/hr/exportAttendance?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}`;
-  });
+        // Show loading
+        document.getElementById('m_empty').classList.add('hidden');
+        document.getElementById('m_loading').classList.remove('hidden');
+        document.getElementById('m_summary').classList.add('hidden');
+        document.getElementById('s_leaveCountBanner').classList.add('hidden');
+        document.getElementById('m_table_wrap').classList.add('hidden');
+        document.getElementById('m_all_table_wrap').classList.add('hidden');
 
-  // ================================================================
-  // MODAL — existing range tab row click
-  // ================================================================
-  const modal         = document.getElementById("leaveModal");
-  const modalBody     = document.getElementById("leaveTableBody");
-  const closeModalBtn = document.getElementById("closeModal");
+        try {
+          if (empId === 'all') {
+            await buildAllEmployees(year, month);
+          } else {
+            await buildSingleEmployee(empId, year, month);
+          }
+        } catch (err) {
+          console.error('Monthly report error:', err);
+          alert('Failed to load report. Check console for details.');
+        } finally {
+          document.getElementById('m_loading').classList.add('hidden');
+        }
+      }
 
-  document.querySelectorAll(".emp-row").forEach(el => {
-    el.addEventListener("click", async () => {
-      const empId = el.getAttribute("data-empid");
-      try {
-        const data = await fetch(`/dashboard/hr/employeeLeaves?emp_id=${empId}`).then(r => r.json());
-        modalBody.innerHTML = "";
-        if (!data.length) {
-          modalBody.innerHTML = `<tr><td colspan='2' class='text-center py-4 text-gray-400 text-sm'>No approved leave records</td></tr>`;
+      // ================================================================
+      // EXPORT EXCEL
+      // ================================================================
+      document.getElementById("exportExcelBtn").addEventListener("click", function () {
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
+        let empId, startDate, endDate;
+
+        if (activeTab === 'monthly') {
+          empId = document.getElementById('m_emp_id').value;
+          const month = parseInt(document.getElementById('m_month').value);
+          const year = parseInt(document.getElementById('m_year').value);
+          if (!empId) { alert('Please select employee and month first'); return; }
+          const total = daysInMonth(year, month);
+          startDate = `${year}-${pad(month)}-01`;
+          endDate = `${year}-${pad(month)}-${pad(total)}`;
         } else {
-          data.forEach(lv => {
-            const type = lv.half_day ? `Half Day (${lv.half_day})` : "Full Day";
-            modalBody.innerHTML += `<tr>
+          empId = document.getElementById("r_emp_id").value;
+          startDate = document.querySelector("[name='start_date']").value;
+          endDate = document.querySelector("[name='end_date']").value;
+        }
+
+        if (!empId || !startDate || !endDate) {
+          alert("Please select employee and date range!");
+          return;
+        }
+        window.location.href = `/dashboard/hr/exportAttendance?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}`;
+      });
+
+      // ================================================================
+      // MODAL — existing range tab row click
+      // ================================================================
+      const modal = document.getElementById("leaveModal");
+      const modalBody = document.getElementById("leaveTableBody");
+      const closeModalBtn = document.getElementById("closeModal");
+
+      document.querySelectorAll(".emp-row").forEach(el => {
+        el.addEventListener("click", async () => {
+          const empId = el.getAttribute("data-empid");
+          try {
+            const data = await fetch(`/dashboard/hr/employeeLeaves?emp_id=${empId}`).then(r => r.json());
+            modalBody.innerHTML = "";
+            if (!data.length) {
+              modalBody.innerHTML = `<tr><td colspan='2' class='text-center py-4 text-gray-400 text-sm'>No approved leave records</td></tr>`;
+            } else {
+              data.forEach(lv => {
+                const type = lv.half_day ? `Half Day (${lv.half_day})` : "Full Day";
+                modalBody.innerHTML += `<tr>
               <td class='border-b py-2 px-3 text-sm text-gray-700'>${new Date(lv.date).toLocaleDateString('en-IN')}</td>
               <td class='border-b py-2 px-3 text-sm text-gray-500'>${type}</td>
             </tr>`;
-          });
-        }
-        modal.classList.add("active");
-      } catch(e) { alert('Failed to load leave details'); }
-    });
-  });
+              });
+            }
+            modal.classList.add("active");
+          } catch (e) { alert('Failed to load leave details'); }
+        });
+      });
 
-  closeModalBtn.addEventListener("click", () => modal.classList.remove("active"));
-  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
-  </script>
+      closeModalBtn.addEventListener("click", () => modal.classList.remove("active"));
+      modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
+
+      // ================================================================
+      // ATTENDANCE DETAILS MODAL LOGIC (Live Database Fetch)
+      // ================================================================
+      const attModal = document.getElementById("attendanceDetailModal");
+      const closeAttModalBtn = document.getElementById("closeAttendanceModal");
+
+      closeAttModalBtn.addEventListener("click", () => attModal.classList.remove("active"));
+      attModal.addEventListener("click", e => { if (e.target === attModal) attModal.classList.remove("active"); });
+
+      function getActiveDateRange() {
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
+        let startDate, endDate;
+
+        if (activeTab === 'monthly') {
+          const month = parseInt(document.getElementById('m_month').value);
+          const year = parseInt(document.getElementById('m_year').value);
+          const total = daysInMonth(year, month);
+          startDate = `${year}-${pad(month)}-01`;
+          endDate = `${year}-${pad(month)}-${pad(total)}`;
+        } else if (activeTab === 'range') {
+          startDate = document.querySelector("#tab-range input[name='start_date']").value;
+          endDate = document.querySelector("#tab-range input[name='end_date']").value;
+        }
+        return { startDate, endDate };
+      }
+
+      async function showAttendanceDetailModal(empId, empName) {
+        const modal = document.getElementById("attendanceDetailModal");
+        const modalTitle = document.getElementById("attModalTitle");
+        const tbody = document.getElementById("attendanceDetailTableBody");
+
+        modalTitle.textContent = `Attendance Details — ${empName}`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">Fetching latest attendance details...</td></tr>`;
+        modal.classList.add("active");
+
+        try {
+          const { startDate, endDate } = getActiveDateRange();
+          if (!startDate || !endDate) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500 text-sm">Please select a valid date range first.</td></tr>`;
+            return;
+          }
+
+          // Fetch fresh daily records for this employee directly from database
+          const res = await fetch(`/dashboard/hr/employeeAttendanceDetails?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}`)
+            .then(r => r.json());
+
+          const rows = res.success ? (res.attendanceData || []) : [];
+          tbody.innerHTML = "";
+
+          if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">No attendance data found for this period</td></tr>`;
+          } else {
+            const sortedRows = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            sortedRows.forEach((row, i) => {
+              const bg = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              const dateStr = new Date(row.date).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              });
+              const dayName = row.day || '';
+              const punchIn = fmtTime(row.punch_in_time);
+              const punchOut = fmtTime(row.punch_out_time);
+              const statusBadge = getBadge(row.status);
+
+              tbody.innerHTML += `
+                <tr class="${bg} hover:bg-blue-50 transition-colors">
+                  <td class="py-2.5 px-3 border-b text-gray-700 font-medium">${dateStr}</td>
+                  <td class="py-2.5 px-3 border-b text-center text-gray-400 text-xs font-medium">${dayName}</td>
+                  <td class="py-2.5 px-3 border-b text-center text-gray-600">${punchIn}</td>
+                  <td class="py-2.5 px-3 border-b text-center text-gray-600">${punchOut}</td>
+                  <td class="py-2.5 px-3 border-b text-center">${statusBadge}</td>
+                </tr>
+              `;
+            });
+          }
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-500 text-sm">Failed to load latest records.</td></tr>`;
+        }
+      }
+    </script>
 
 </body>
+
 </html>

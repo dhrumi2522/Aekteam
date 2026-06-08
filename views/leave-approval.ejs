@@ -492,6 +492,7 @@
                             <th>Employee ID</th>
                             <th>Employee Name</th>
                             <th>Leave Type</th>
+                            <th>Day Type</th>
                             <th>Start Date</th>
                             <th>End Date</th>
                             <th>Reason</th>
@@ -502,7 +503,7 @@
                     <tbody>
                         <% if (leaveApplications.length === 0) { %>
                             <tr>
-                                <td colspan="8">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <i class="fas fa-clipboard"></i>
                                         <h3>No Leave Applications</h3>
@@ -533,6 +534,11 @@
                                     <td data-label="Leave Type">
                                         <span class="badge bg-info text-dark">
                                             <%= application.leave_type %>
+                                        </span>
+                                    </td>
+                                    <td data-label="Day Type">
+                                        <span class="badge bg-secondary">
+                                            <%= application.half_day || 'Full Day' %>
                                         </span>
                                     </td>
                                     <td data-label="Start Date">

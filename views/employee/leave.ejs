@@ -512,9 +512,16 @@
                         <small>days used</small>
                     </div>
                     <div class="leave-balance-card">
-                        <h3><i class="fas fa-calendar-alt"></i> Remaining Leave</h3>
+                        <h3><i class="fas fa-calendar-alt"></i> Casual/Sick Leave</h3>
                         <p>
                             <%= employeeData.leave_balance %>
+                        </p>
+                        <small>days remaining</small>
+                    </div>
+                    <div class="leave-balance-card" style="border-top: 4px solid #fda085;">
+                        <h3><i class="fas fa-umbrella-beach"></i> Festival Leave</h3>
+                        <p>
+                            <%= employeeData.festival_balance || 0 %>
                         </p>
                         <small>days remaining</small>
                     </div>
@@ -554,7 +561,8 @@
                                 <select class="form-control" id="leave_type">
                                     <option value="Sick">Sick Leave</option>
                                     <option value="Casual">Casual Leave</option>
-                                    <option value="Paid">Paid Leave</option>
+                                    <option value="Paid">UnPaid Leave</option>
+                                    <option value="Festival Leave">Festival Leave</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -573,14 +581,14 @@
                         </div>
 
                         <div class="form-group" style="display: none;">
-    <label><i class="fas fa-users"></i> CC to (Optional)</label>
-    <div class="selectBox">
-        <select id="ccSelect">
-            <option>Select employees to notify</option>
-        </select>
-        <div id="checkboxes" class="checkbox-list"></div>
-    </div>
-</div>
+                            <label><i class="fas fa-users"></i> CC to (Optional)</label>
+                            <div class="selectBox">
+                                <select id="ccSelect">
+                                    <option>Select employees to notify</option>
+                                </select>
+                                <div id="checkboxes" class="checkbox-list"></div>
+                            </div>
+                        </div>
 
 
                         <div class="form-group" style="margin-top: 2rem;">
@@ -641,7 +649,41 @@
 
                 // Set up form submission
                 setupLeaveForm();
+
+                // Setup Festival Leave duration selection handling
+                setupFestivalDurationLogic();
             });
+
+            function setupFestivalDurationLogic() {
+                const leaveTypeSelect = document.getElementById('leave_type');
+                const halfDaySelect = document.getElementById('half_day');
+
+                // Store original options
+                const originalHalfDayOptions = Array.from(halfDaySelect.options).map(opt => ({
+                    value: opt.value,
+                    text: opt.text
+                }));
+
+                function handleLeaveTypeChange() {
+                    const selectedType = leaveTypeSelect.value;
+                    if (selectedType === 'Festival Leave') {
+                        // Keep only Full Day option
+                        halfDaySelect.innerHTML = '<option value="">Full Day</option>';
+                        halfDaySelect.value = '';
+                    } else {
+                        // Restore all options if they were modified
+                        if (halfDaySelect.options.length < originalHalfDayOptions.length) {
+                            halfDaySelect.innerHTML = originalHalfDayOptions.map(opt =>
+                                `<option value="${opt.value}">${opt.text}</option>`
+                            ).join('');
+                        }
+                    }
+                }
+
+                leaveTypeSelect.addEventListener('change', handleLeaveTypeChange);
+                // Initial run
+                handleLeaveTypeChange();
+            }
 
             async function initCCDropdown() {
                 const checkboxes = document.getElementById('checkboxes');
@@ -697,8 +739,65 @@
             }
 
             function setupLeaveForm() {
+                const leaveBalance = parseFloat('<%= employeeData.leave_balance %>') || 0;
+                const festivalBalance = parseFloat('<%= employeeData.festival_balance || 0 %>') || 0;
+
                 document.getElementById("leaveForm").addEventListener("submit", async function (event) {
                     event.preventDefault();
+
+                    const leaveType = document.getElementById("leave_type").value;
+                    const startDateVal = document.getElementById("start_date").value;
+                    const endDateVal = document.getElementById("end_date").value;
+                    const halfDayVal = document.getElementById("half_day").value;
+
+                    let requestedDays = 1;
+                    if (halfDayVal) {
+                        requestedDays = 0.5;
+                    } else if (startDateVal && endDateVal) {
+                        const start = new Date(startDateVal);
+                        const end = new Date(endDateVal);
+                        requestedDays = Math.round((end - start) / (1000 * 3600 * 24)) + 1;
+                    }
+
+                    if (leaveType === 'Sick' || leaveType === 'Casual') {
+                        if (leaveBalance <= 0) {
+                            Swal.fire({
+                                title: "Error!",
+                                text: "You have 0.0 balance for Casual/Sick Leave.",
+                                icon: "error",
+                                confirmButtonColor: "#dc3545"
+                            });
+                            return;
+                        }
+                        if (requestedDays > leaveBalance) {
+                            Swal.fire({
+                                title: "Error!",
+                                text: `Insufficient balance. You requested ${requestedDays} days but only have ${leaveBalance} days left for Casual/Sick Leave.`,
+                                icon: "error",
+                                confirmButtonColor: "#dc3545"
+                            });
+                            return;
+                        }
+                    } else if (leaveType === 'Festival Leave') {
+                        if (festivalBalance <= 0) {
+                            Swal.fire({
+                                title: "Error!",
+                                text: "You have 0.0 balance for Festival Leave.",
+                                icon: "error",
+                                confirmButtonColor: "#dc3545"
+                            });
+                            return;
+                        }
+                        if (requestedDays > festivalBalance) {
+                            Swal.fire({
+                                title: "Error!",
+                                text: `Insufficient balance. You requested ${requestedDays} days but only have ${festivalBalance} days left for Festival Leave.`,
+                                icon: "error",
+                                confirmButtonColor: "#dc3545"
+                            });
+                            return;
+                        }
+                    }
 
                     const { isConfirmed } = await Swal.fire({
                         title: "Confirm Leave Application",
@@ -783,23 +882,23 @@
                 }
             }
 
-     async function fetchPendingLeaves() {
-    try {
-        const response = await fetch('/dashboard/employee/leave/list?status=pending', {
-            credentials: 'include'
-        });
-        const result = await response.json();
-        const pendingList = document.getElementById('pendingList');
+            async function fetchPendingLeaves() {
+                try {
+                    const response = await fetch('/dashboard/employee/leave/list?status=pending', {
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+                    const pendingList = document.getElementById('pendingList');
 
-        if (!response.ok) throw new Error(result.message || "Failed to fetch pending leaves");
+                    if (!response.ok) throw new Error(result.message || "Failed to fetch pending leaves");
 
-        pendingList.innerHTML = result.leaves.map(leave => {
-            const startDate = formatDate(leave.start_date);
-            const endDate = formatDate(leave.end_date);
-            const statusBadge = getStatusBadge(leave.status);
-            const reason = leave.reason || 'No reason provided';
+                    pendingList.innerHTML = result.leaves.map(leave => {
+                        const startDate = formatDate(leave.start_date);
+                        const endDate = formatDate(leave.end_date);
+                        const statusBadge = getStatusBadge(leave.status);
+                        const reason = leave.reason || 'No reason provided';
 
-            return `
+                        return `
                 <tr>
                     <td>${startDate} - ${endDate}</td>
                     <td>${leave.leave_type}</td>
@@ -813,30 +912,30 @@
                     </td>
                 </tr>
             `;
-        }).join('') || '<tr><td colspan="6" style="text-align: center;">No pending leave requests</td></tr>';
-    } catch (error) {
-        console.error("Error fetching pending leaves:", error);
-        pendingList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
-    }
-}
+                    }).join('') || '<tr><td colspan="6" style="text-align: center;">No pending leave requests</td></tr>';
+                } catch (error) {
+                    console.error("Error fetching pending leaves:", error);
+                    pendingList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
+                }
+            }
 
-       async function fetchLeaveHistory() {
-    try {
-        const response = await fetch('/dashboard/employee/leave/list', {
-            credentials: 'include'
-        });
-        const result = await response.json();
-        const leaveList = document.getElementById('leaveList');
+            async function fetchLeaveHistory() {
+                try {
+                    const response = await fetch('/dashboard/employee/leave/list', {
+                        credentials: 'include'
+                    });
+                    const result = await response.json();
+                    const leaveList = document.getElementById('leaveList');
 
-        if (!response.ok) throw new Error(result.message || "Failed to fetch leave history");
+                    if (!response.ok) throw new Error(result.message || "Failed to fetch leave history");
 
-        leaveList.innerHTML = result.leaves.map(leave => {
-            const startDate = formatDate(leave.start_date);
-            const endDate = formatDate(leave.end_date);
-            const statusBadge = getStatusBadge(leave.status);
-            const reason = leave.reason || 'No reason provided';
+                    leaveList.innerHTML = result.leaves.map(leave => {
+                        const startDate = formatDate(leave.start_date);
+                        const endDate = formatDate(leave.end_date);
+                        const statusBadge = getStatusBadge(leave.status);
+                        const reason = leave.reason || 'No reason provided';
 
-            return `
+                        return `
                 <tr>
                     <td>${startDate} - ${endDate}</td>
                     <td>${leave.leave_type}</td>
@@ -845,12 +944,12 @@
                     <td>${statusBadge}</td>
                 </tr>
             `;
-        }).join('') || '<tr><td colspan="5" style="text-align: center;">No leave history found</td></tr>';
-    } catch (error) {
-        console.error("Error fetching leave history:", error);
-        leaveList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
-    }
-}
+                    }).join('') || '<tr><td colspan="5" style="text-align: center;">No leave history found</td></tr>';
+                } catch (error) {
+                    console.error("Error fetching leave history:", error);
+                    leaveList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #dc3545;">Error loading data</td></tr>';
+                }
+            }
 
             async function cancelLeave(leaveId) {
                 if (!leaveId) {

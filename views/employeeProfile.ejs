@@ -91,6 +91,10 @@
                             <p class="font-medium"><%= employee.resign_date ? new Date(employee.resign_date).toLocaleDateString('en-GB') : "N/A" %></p>
                         </div>
                         <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-500">Employment Status</p>
+                            <p class="font-medium capitalize"><%= employee.employment_status || "N/A" %></p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
                             <p class="text-sm text-gray-500">Leave Balance</p>
                             <p class="font-medium"><%= employee.leave_balance %></p>
                         </div>

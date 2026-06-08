@@ -1,907 +1,947 @@
 <%- include('./partials/hrsidebar') %>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HR Dashboard</title>
-  
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <style>
-  /* Modern CSS Variables */
-  :root {
-    --primary: #4361ee;
-    --primary-light: #4895ef;
-    --secondary: #3f37c9;
-    --success: #4cc9f0;
-    --info: #4cc9f0;
-    --warning: #f72585;
-    --danger: #f72585;
-    --light: #f8f9fa;
-    --dark: #212529;
-    --gray: #6c757d;
-    --light-gray: #e9ecef;
-    --white: #ffffff;
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
-    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    --box-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.12);
-    --transition: all 0.3s ease;
-    --sidebar-width: 270px;
-  }
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #f5f7fb 0%, #f0f2f5 100%);
-    color: #333;
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 20px;
-    margin-left: var(--sidebar-width);
-    transition: margin-left 0.3s ease, padding 0.3s ease;
-    overflow-x: hidden;
-  }
-
-  /* Main Container */
-  .dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 15px;
-  }
-
-  /* Header */
-  .dashboard-header {
-    margin-bottom: 30px;
-    padding: 15px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-  }
-
-  .dashboard-header h2 {
-    color: var(--dark);
-    font-weight: 700;
-    margin-bottom: 5px;
-    font-size: 28px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .dashboard-header p {
-    color: var(--gray);
-    font-size: 16px;
-    font-weight: 400;
-  }
-
-  /* Welcome Card */
-  .welcome-card {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: var(--white);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    margin-bottom: 30px;
-    box-shadow: var(--box-shadow);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .welcome-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 200px;
-    height: 200px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 50%;
-  }
-
-  .welcome-text h2 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--white);
-  }
-
-  .welcome-text p {
-    font-size: 16px;
-    opacity: 0.9;
-    max-width: 600px;
-  }
-
-  .welcome-icon {
-    font-size: 60px;
-    opacity: 0.8;
-    z-index: 1;
-  }
-
-  /* Stats Grid */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
-  }
-
-  .stat-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    cursor: pointer;
-    border-top: 4px solid;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-lg);
-  }
-
-  .stat-card i {
-    font-size: 28px;
-    margin-bottom: 15px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .stat-card h3 {
-    font-size: 14px;
-    color: var(--gray);
-    margin-bottom: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .stat-card .count {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--dark);
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Stat Card Colors */
-  .stat-card.total-employees {
-    border-color: var(--primary);
-  }
-  .stat-card.total-employees i { color: var(--primary); }
-
-  .stat-card.on-leave {
-    border-color: var(--warning);
-  }
-  .stat-card.on-leave i { color: var(--warning); }
-
-  .stat-card.present {
-    border-color: #4CAF50;
-  }
-  .stat-card.present i { color: #4CAF50; }
-
-  .stat-card.absent {
-    border-color: #F44336;
-  }
-  .stat-card.absent i { color: #F44336; }
-
-  /* Punch Card */
-  .punch-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--box-shadow);
-    margin-bottom: 30px;
-    text-align: center;
-  }
-
-  .punch-card .time-display {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--primary);
-    margin: 15px 0;
-  }
-
-  .punch-card .date-display {
-    color: var(--gray);
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
-
-  .punch-card #punchButton {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    border: none;
-    padding: 12px 30px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: var(--border-radius-sm);
-    transition: var(--transition);
-    width: 100%;
-    max-width: 200px;
-  }
-
-  .punch-card #punchButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(67, 97, 238, 0.3);
-  }
-
-  /* Charts Container */
-  .charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
-  }
-
-  .chart-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--box-shadow);
-  }
-
-  .chart-card h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: var(--dark);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .chart-card h3 i {
-    color: var(--primary);
-  }
-
-  /* Modal Styles */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-
-  .modal-content {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    width: 100%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    animation: modalSlideIn 0.3s ease-out;
-  }
-
-  @keyframes modalSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .modal-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--light-gray);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: var(--white);
-  }
-
-  .modal-header h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    color: var(--white);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: var(--transition);
-  }
-
-  .close-btn:hover {
-    background: rgba(255,255,255,0.1);
-  }
-
-  .modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    max-height: 60vh;
-  }
-
-  .employee-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .employee-list h4 {
-    margin: 20px 0 10px;
-    color: var(--primary);
-    font-size: 16px;
-    font-weight: 600;
-    padding-bottom: 5px;
-    border-bottom: 2px solid var(--light-gray);
-  }
-
-  .employee-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 20px 0;
-  }
-
-  .employee-list li {
-    background: var(--light);
-    padding: 15px;
-    margin-bottom: 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: 15px;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .employee-list li:before {
-    content: '👤';
-    font-size: 14px;
-  }
-
-  .employee-list li:hover {
-    background: #eef3ff;
-    transform: translateX(5px);
-  }
-
-  /* No Data Message */
-  .no-data {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--gray);
-  }
-
-  .no-data i {
-    font-size: 48px;
-    margin-bottom: 15px;
-    opacity: 0.5;
-  }
-
-  /* Tablet Styles */
-  @media (max-width: 1024px) {
-    body {
-      margin-left: 0;
-      padding: 15px;
-    }
-
-    .dashboard-container {
-      padding: 0 10px;
-    }
-
-    .welcome-card {
-      flex-direction: column;
-      text-align: center;
-      padding: 25px 20px;
-      gap: 20px;
-    }
-
-    .welcome-icon {
-      font-size: 50px;
-      order: -1;
-    }
-
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .charts-container {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Mobile Styles */
-  @media (max-width: 768px) {
-    body {
-      padding: 10px;
-    }
-
-    .dashboard-header {
-      margin-bottom: 20px;
-    }
-
-    .dashboard-header h2 {
-      font-size: 24px;
-    }
-
-    .dashboard-header p {
-      font-size: 14px;
-    }
-
-    .welcome-card {
-      padding: 20px 15px;
-      margin-bottom: 20px;
-    }
-
-    .welcome-text h2 {
-      font-size: 20px;
-    }
-
-    .welcome-text p {
-      font-size: 14px;
-    }
-
-    .welcome-icon {
-      font-size: 40px;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-
-    .stat-card {
-      padding: 20px;
-    }
-
-    .stat-card .count {
-      font-size: 28px;
-    }
-
-    .punch-card {
-      padding: 20px;
-    }
-
-    .punch-card .time-display {
-      font-size: 28px;
-    }
-
-    .chart-card {
-      padding: 20px;
-    }
-
-    .modal-content {
-      margin: 10px;
-    }
-
-    .modal-header {
-      padding: 15px;
-    }
-
-    .modal-body {
-      padding: 15px;
-    }
-  }
-
-  /* Small Mobile */
-  @media (max-width: 480px) {
-    .dashboard-header h2 {
-      font-size: 22px;
-    }
-
-    .stat-card {
-      padding: 15px;
-    }
-
-    .stat-card .count {
-      font-size: 24px;
-    }
-
-    .punch-card .time-display {
-      font-size: 24px;
-    }
-  }
-
-  /* Desktop Large */
-  @media (min-width: 1400px) {
-    .dashboard-container {
-      max-width: 1600px;
-    }
-
-    .stats-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  /* Animation Classes */
-  .fade-in {
-    animation: fadeIn 0.5s ease-in;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Loading State */
-  .loading {
-    opacity: 0.6;
-    pointer-events: none;
-  }
-
-  /* Status Indicators */
-  .status-indicator {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 8px;
-  }
-
-  .status-present { background-color: #4CAF50; }
-  .status-absent { background-color: #F44336; }
-  .status-leave { background-color: #FF9800; }
-  </style>
-</head>
-<body>
-  <!-- Employee Modal -->
-  <div id="employeeModal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modalTitle">Employee Details</h2>
-        <button class="close-btn" onclick="closeModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div id="employeeList" class="employee-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="dashboard-container fade-in">
-    <!-- Header -->
-    <div class="dashboard-header">
-      <h2>Welcome, <%= user.name %></h2>
-      <p>HR Dashboard - Employee Management & Analytics</p>
-    </div>
-
-    <!-- Welcome Card -->
-    <div class="welcome-card">
-      <div class="welcome-text">
-        <h2>HR Management Dashboard</h2>
-        <p>Monitor employee statistics, manage attendance, and optimize workforce efficiency in real-time</p>
-      </div>
-      <div class="welcome-icon">
-        <i class="fas fa-users-cog"></i>
-      </div>
-    </div>
-
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <div class="stat-card total-employees" onclick="showEmployees('all')">
-        <i class="fas fa-users"></i>
-        <h3>Total Employees</h3>
-        <div class="count"><%= totalEmployees %></div>
-      </div>
-
-      <div class="stat-card on-leave" onclick="showEmployees('leave')">
-        <i class="fas fa-umbrella-beach"></i>
-        <h3>On Leave Today</h3>
-        <div class="count"><%= leaveData %></div>
-      </div>
-
-      <div class="stat-card present" onclick="showEmployees('present')">
-        <i class="fas fa-user-check"></i>
-        <h3>Present Today</h3>
-        <div class="count"><%= attendanceData.present || 0 %></div>
-      </div>
-
-      <div class="stat-card absent" onclick="showEmployees('absent')">
-        <i class="fas fa-user-times"></i>
-        <h3>Absent Today</h3>
-        <div class="count"><%= attendanceData.absent || 0 %></div>
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* Modern CSS Variables */
+      :root {
+        --primary: #4361ee;
+        --primary-light: #4895ef;
+        --secondary: #3f37c9;
+        --success: #4cc9f0;
+        --info: #4cc9f0;
+        --warning: #f72585;
+        --danger: #f72585;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --gray: #6c757d;
+        --light-gray: #e9ecef;
+        --white: #ffffff;
+        --border-radius: 12px;
+        --border-radius-sm: 8px;
+        --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        --box-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.12);
+        --transition: all 0.3s ease;
+        --sidebar-width: 270px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #f5f7fb 0%, #f0f2f5 100%);
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 20px;
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.3s ease, padding 0.3s ease;
+        overflow-x: hidden;
+      }
+
+      /* Main Container */
+      .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 15px;
+      }
+
+      /* Header */
+      .dashboard-header {
+        margin-bottom: 30px;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .dashboard-header h2 {
+        color: var(--dark);
+        font-weight: 700;
+        margin-bottom: 5px;
+        font-size: 28px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .dashboard-header p {
+        color: var(--gray);
+        font-size: 16px;
+        font-weight: 400;
+      }
+
+      /* Welcome Card */
+      .welcome-card {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: var(--white);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: var(--box-shadow);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .welcome-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+      }
+
+      .welcome-text h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--white);
+      }
+
+      .welcome-text p {
+        font-size: 16px;
+        opacity: 0.9;
+        max-width: 600px;
+      }
+
+      .welcome-icon {
+        font-size: 60px;
+        opacity: 0.8;
+        z-index: 1;
+      }
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+      }
+
+      .stat-card {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        cursor: pointer;
+        border-top: 4px solid;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--box-shadow-lg);
+      }
+
+      .stat-card i {
+        font-size: 28px;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-card h3 {
+        font-size: 14px;
+        color: var(--gray);
+        margin-bottom: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-card .count {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--dark);
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Stat Card Colors */
+      .stat-card.total-employees {
+        border-color: var(--primary);
+      }
+
+      .stat-card.total-employees i {
+        color: var(--primary);
+      }
+
+      .stat-card.on-leave {
+        border-color: var(--warning);
+      }
+
+      .stat-card.on-leave i {
+        color: var(--warning);
+      }
+
+      .stat-card.present {
+        border-color: #4CAF50;
+      }
+
+      .stat-card.present i {
+        color: #4CAF50;
+      }
+
+      .stat-card.absent {
+        border-color: #F44336;
+      }
+
+      .stat-card.absent i {
+        color: #F44336;
+      }
+
+      /* Punch Card */
+      .punch-card {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .punch-card .time-display {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 15px 0;
+      }
+
+      .punch-card .date-display {
+        color: var(--gray);
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+
+      .punch-card #punchButton {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: var(--border-radius-sm);
+        transition: var(--transition);
+        width: 100%;
+        max-width: 200px;
+      }
+
+      .punch-card #punchButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(67, 97, 238, 0.3);
+      }
+
+      /* Charts Container */
+      .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+      }
+
+      .chart-card {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .chart-card h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .chart-card h3 i {
+        color: var(--primary);
+      }
+
+      /* Modal Styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 20px;
+      }
+
+      .modal-content {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        width: 100%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        animation: modalSlideIn 0.3s ease-out;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--light-gray);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: var(--white);
+      }
+
+      .modal-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        color: var(--white);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--transition);
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 60vh;
+      }
+
+      .employee-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .employee-list h4 {
+        margin: 20px 0 10px;
+        color: var(--primary);
+        font-size: 16px;
+        font-weight: 600;
+        padding-bottom: 5px;
+        border-bottom: 2px solid var(--light-gray);
+      }
+
+      .employee-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+      }
+
+      .employee-list li {
+        background: var(--light);
+        padding: 15px;
+        margin-bottom: 8px;
+        border-radius: var(--border-radius-sm);
+        font-size: 15px;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .employee-list li:before {
+        content: '👤';
+        font-size: 14px;
+      }
+
+      .employee-list li:hover {
+        background: #eef3ff;
+        transform: translateX(5px);
+      }
+
+      /* No Data Message */
+      .no-data {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray);
+      }
+
+      .no-data i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+      }
+
+      /* Tablet Styles */
+      @media (max-width: 1024px) {
+        body {
+          margin-left: 0;
+          padding: 15px;
+        }
+
+        .dashboard-container {
+          padding: 0 10px;
+        }
+
+        .welcome-card {
+          flex-direction: column;
+          text-align: center;
+          padding: 25px 20px;
+          gap: 20px;
+        }
+
+        .welcome-icon {
+          font-size: 50px;
+          order: -1;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 20px;
+        }
+
+        .charts-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Mobile Styles */
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .dashboard-header {
+          margin-bottom: 20px;
+        }
+
+        .dashboard-header h2 {
+          font-size: 24px;
+        }
+
+        .dashboard-header p {
+          font-size: 14px;
+        }
+
+        .welcome-card {
+          padding: 20px 15px;
+          margin-bottom: 20px;
+        }
+
+        .welcome-text h2 {
+          font-size: 20px;
+        }
+
+        .welcome-text p {
+          font-size: 14px;
+        }
+
+        .welcome-icon {
+          font-size: 40px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .stat-card {
+          padding: 20px;
+        }
+
+        .stat-card .count {
+          font-size: 28px;
+        }
+
+        .punch-card {
+          padding: 20px;
+        }
+
+        .punch-card .time-display {
+          font-size: 28px;
+        }
+
+        .chart-card {
+          padding: 20px;
+        }
+
+        .modal-content {
+          margin: 10px;
+        }
+
+        .modal-header {
+          padding: 15px;
+        }
+
+        .modal-body {
+          padding: 15px;
+        }
+      }
+
+      /* Small Mobile */
+      @media (max-width: 480px) {
+        .dashboard-header h2 {
+          font-size: 22px;
+        }
+
+        .stat-card {
+          padding: 15px;
+        }
+
+        .stat-card .count {
+          font-size: 24px;
+        }
+
+        .punch-card .time-display {
+          font-size: 24px;
+        }
+      }
+
+      /* Desktop Large */
+      @media (min-width: 1400px) {
+        .dashboard-container {
+          max-width: 1600px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      /* Animation Classes */
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Loading State */
+      .loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      /* Status Indicators */
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .status-present {
+        background-color: #4CAF50;
+      }
+
+      .status-absent {
+        background-color: #F44336;
+      }
+
+      .status-leave {
+        background-color: #FF9800;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Employee Modal -->
+    <div id="employeeModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Employee Details</h2>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="employeeList" class="employee-list"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Punch Card -->
-    <div class="punch-card">
-      <div id="dateDisplay" class="date-display"></div>
-      <div id="timeDisplay" class="time-display"></div>
-      <p class="mb-3 text-muted">Working Hours: 10:00 AM To 7:00 PM</p>
-      <button id="punchButton" class="btn btn-primary">Loading...</button>
-    </div>
+    <div class="dashboard-container fade-in">
+      <!-- Header -->
+      <div class="dashboard-header">
+        <h2>Welcome, <%= user.name %>
+        </h2>
+        <p>HR Dashboard - Employee Management & Analytics</p>
+      </div>
 
-  
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <div class="welcome-text">
+          <h2>HR Management Dashboard</h2>
+          <p>Monitor employee statistics, manage attendance, and optimize workforce efficiency in real-time</p>
+        </div>
+        <div class="welcome-icon">
+          <i class="fas fa-users-cog"></i>
+        </div>
+      </div>
 
-  <script>
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      updateDateTime();
-      setInterval(updateDateTime, 1000);
-      checkPunchStatus();
-      initializeCharts();
-    });
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card total-employees" onclick="showEmployees('all')">
+          <i class="fas fa-users"></i>
+          <h3>Total Employees</h3>
+          <div class="count">
+            <%= totalEmployees %>
+          </div>
+        </div>
 
-    // Date & Time Display
-    function updateDateTime() {
-      const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      };
-      const dateStr = now.toLocaleDateString('en-IN', options);
-      const timeStr = now.toLocaleTimeString('en-IN', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true 
-      });
+        <div class="stat-card on-leave" onclick="showEmployees('leave')">
+          <i class="fas fa-umbrella-beach"></i>
+          <h3>On Leave Today</h3>
+          <div class="count">
+            <%= leaveData %>
+          </div>
+        </div>
 
-      document.getElementById('dateDisplay').textContent = dateStr;
-      document.getElementById('timeDisplay').textContent = timeStr;
-    }
+        <div class="stat-card present" onclick="showEmployees('present')">
+          <i class="fas fa-user-check"></i>
+          <h3>Present Today</h3>
+          <div class="count">
+            <%= attendanceData.present || 0 %>
+          </div>
+        </div>
 
-    // Modal Functions
-    async function showEmployees(status) {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const res = await fetch(`/dashboard/hr/employee-status?status=${status}&date=${today}`);
-        const data = await res.json();
+        <div class="stat-card absent" onclick="showEmployees('absent')">
+          <i class="fas fa-user-times"></i>
+          <h3>Absent Today</h3>
+          <div class="count">
+            <%= attendanceData.absent || 0 %>
+          </div>
+        </div>
+      </div>
 
-        const modal = document.getElementById("employeeModal");
-        const list = document.getElementById("employeeList");
-        const title = document.getElementById("modalTitle");
+      <!-- Punch Card -->
+      <div class="punch-card">
+        <div id="dateDisplay" class="date-display"></div>
+        <div id="timeDisplay" class="time-display"></div>
+        <p class="mb-3 text-muted">Working Hours: 10:00 AM To 7:00 PM</p>
+        <button id="punchButton" class="btn btn-primary">Loading...</button>
+      </div>
 
-        list.innerHTML = "";
 
-        if (data.success && data.employees.length > 0) {
-          // Set modal title
-          const titles = {
-            'all': 'All Employees',
-            'present': 'Employees Present Today',
-            'absent': 'Employees Absent Today',
-            'leave': 'Employees On Leave Today'
+
+      <script>
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+          updateDateTime();
+          setInterval(updateDateTime, 1000);
+          checkPunchStatus();
+          initializeCharts();
+        });
+
+        // Date & Time Display
+        function updateDateTime() {
+          const now = new Date();
+          const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
           };
-          title.textContent = titles[status] || 'Employees';
-
-          // Group employees by role
-          const grouped = {};
-          data.employees.forEach(emp => {
-            if (!grouped[emp.role]) grouped[emp.role] = [];
-            grouped[emp.role].push(emp.name);
+          const dateStr = now.toLocaleDateString('en-IN', options);
+          const timeStr = now.toLocaleTimeString('en-IN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
           });
 
-          // Render grouped roles
-          Object.keys(grouped).forEach(role => {
-            const roleHeader = document.createElement("h4");
-            roleHeader.textContent = `${role} (${grouped[role].length})`;
-            list.appendChild(roleHeader);
+          document.getElementById('dateDisplay').textContent = dateStr;
+          document.getElementById('timeDisplay').textContent = timeStr;
+        }
 
-            const ul = document.createElement("ul");
-            grouped[role].forEach(name => {
-              const li = document.createElement("li");
-              li.textContent = name;
-              ul.appendChild(li);
-            });
-            list.appendChild(ul);
-          });
-        } else {
-          title.textContent = "No Employees Found";
-          const noData = document.createElement("div");
-          noData.className = "no-data";
-          noData.innerHTML = `
+        // Modal Functions
+        async function showEmployees(status) {
+          try {
+            const today = new Date().toISOString().split("T")[0];
+            const res = await fetch(`/dashboard/hr/employee-status?status=${status}&date=${today}`);
+            const data = await res.json();
+
+            const modal = document.getElementById("employeeModal");
+            const list = document.getElementById("employeeList");
+            const title = document.getElementById("modalTitle");
+
+            list.innerHTML = "";
+
+            if (data.success && data.employees.length > 0) {
+              // Set modal title
+              const titles = {
+                'all': 'All Employees',
+                'present': 'Employees Present Today',
+                'absent': 'Employees Absent Today',
+                'leave': 'Employees On Leave Today'
+              };
+              title.textContent = titles[status] || 'Employees';
+
+              // Group employees by role
+              const grouped = {};
+              data.employees.forEach(emp => {
+                if (!grouped[emp.role]) grouped[emp.role] = [];
+                grouped[emp.role].push(emp.name);
+              });
+
+              // Render grouped roles
+              Object.keys(grouped).forEach(role => {
+                const roleHeader = document.createElement("h4");
+                roleHeader.textContent = `${role} (${grouped[role].length})`;
+                list.appendChild(roleHeader);
+
+                const ul = document.createElement("ul");
+                grouped[role].forEach(name => {
+                  const li = document.createElement("li");
+                  li.textContent = name;
+                  ul.appendChild(li);
+                });
+                list.appendChild(ul);
+              });
+            } else {
+              title.textContent = "No Employees Found";
+              const noData = document.createElement("div");
+              noData.className = "no-data";
+              noData.innerHTML = `
             <i class="fas fa-user-slash"></i>
             <p>No employees match this status</p>
           `;
-          list.appendChild(noData);
-        }
-
-        modal.style.display = "flex";
-      } catch (err) {
-        console.error("Error fetching employee list:", err);
-        Swal.fire("Error", "Failed to load employee data", "error");
-      }
-    }
-
-    function closeModal() {
-      document.getElementById("employeeModal").style.display = "none";
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-      const modal = document.getElementById("employeeModal");
-      if (event.target === modal) {
-        closeModal();
-      }
-    }
-
-    // Punch Functions
-    async function checkPunchStatus() {
-      try {
-        const response = await fetch('/dashboard/employee/punch-status', {
-          method: 'GET',
-          credentials: 'include'
-        });
-        const data = await response.json();
-        const punchButton = document.getElementById("punchButton");
-
-        if (data.punchedIn) {
-          punchButton.textContent = "Punch Out";
-          punchButton.className = "btn btn-danger";
-          punchButton.onclick = confirmPunchOut;
-        } else {
-          punchButton.textContent = "Punch In";
-          punchButton.className = "btn btn-primary";
-          punchButton.onclick = punchIn;
-        }
-      } catch (error) {
-        console.error("Error checking punch status:", error);
-      }
-    }
-
-    function getCurrentLocation() {
-      return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-          return reject("Geolocation not supported.");
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            resolve({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude
-            });
-          },
-          (error) => {
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                reject("Location permission denied");
-                break;
-              case error.POSITION_UNAVAILABLE:
-                reject("Location unavailable");
-                break;
-              case error.TIMEOUT:
-                reject("Location request timed out");
-                break;
-              default:
-                reject("Unknown location error");
+              list.appendChild(noData);
             }
-          },
-          {
-            enableHighAccuracy: false,
-            timeout: 10000,
-            maximumAge: 0
+
+            modal.style.display = "flex";
+          } catch (err) {
+            console.error("Error fetching employee list:", err);
+            Swal.fire("Error", "Failed to load employee data", "error");
           }
-        );
-      });
-    }
-
-    async function punchIn() {
-      try {
-        const button = document.getElementById("punchButton");
-        button.classList.add("loading");
-        
-        const location = await getCurrentLocation().catch(error => {
-          console.warn("Location access failed:", error);
-          return null;
-        });
-
-        const response = await fetch('/dashboard/employee/punch-in', {     
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },          
-          credentials: 'include',     
-          body: JSON.stringify({
-            latitude: location?.latitude || null,
-            longitude: location?.longitude || null
-          })
-        });
-
-        const data = await response.json();
-        button.classList.remove("loading");
-
-        if (response.ok) {
-          Swal.fire({
-            title: "✅ Success!",
-            text: data.message,
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false
-          }).then(() => {
-            window.location.reload();
-          });
-        } else {
-          Swal.fire("Error!", data.message, "error");
         }
-      } catch (err) {
-        document.getElementById("punchButton").classList.remove("loading");
-        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-      }
-    }
 
-    function confirmPunchOut() {
-      Swal.fire({
-        title: "Confirm Punch Out",
-        text: "Are you sure you want to punch out?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes, Punch Out",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#d33"
-      }).then(result => {
-        if (result.isConfirmed) punchOut();
-      });
-    }
-
-    async function punchOut() {
-      try {
-        const button = document.getElementById("punchButton");
-        button.classList.add("loading");
-        
-        const response = await fetch('/dashboard/employee/punch-out', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await response.json();
-        
-        button.classList.remove("loading");
-
-        if (response.ok) {
-          Swal.fire({
-            title: "Success!",
-            text: data.message,
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false
-          }).then(() => {
-            window.location.reload();
-          });
-        } else {
-          Swal.fire("Error!", data.message, "error");
+        function closeModal() {
+          document.getElementById("employeeModal").style.display = "none";
         }
-      } catch (error) {
-        document.getElementById("punchButton").classList.remove("loading");
-        Swal.fire("Server Error!", "Something went wrong.", "error");
-      }
-    }
 
-   
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeModal();
-    });
-  </script>
-</body>
-</html>
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+          const modal = document.getElementById("employeeModal");
+          if (event.target === modal) {
+            closeModal();
+          }
+        }
+
+        // Punch Functions
+        async function checkPunchStatus() {
+          try {
+            const response = await fetch('/dashboard/employee/punch-status', {
+              method: 'GET',
+              credentials: 'include'
+            });
+            const data = await response.json();
+            const punchButton = document.getElementById("punchButton");
+
+            if (data.punchedIn) {
+              punchButton.textContent = "Punch Out";
+              punchButton.className = "btn btn-danger";
+              punchButton.onclick = confirmPunchOut;
+            } else {
+              punchButton.textContent = "Punch In";
+              punchButton.className = "btn btn-primary";
+              punchButton.onclick = punchIn;
+            }
+          } catch (error) {
+            console.error("Error checking punch status:", error);
+          }
+        }
+
+        function getCurrentLocation() {
+          return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+              return reject("Geolocation not supported.");
+            }
+
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                resolve({
+                  latitude: pos.coords.latitude,
+                  longitude: pos.coords.longitude
+                });
+              },
+              (error) => {
+                switch (error.code) {
+                  case error.PERMISSION_DENIED:
+                    reject("Location permission denied");
+                    break;
+                  case error.POSITION_UNAVAILABLE:
+                    reject("Location unavailable");
+                    break;
+                  case error.TIMEOUT:
+                    reject("Location request timed out");
+                    break;
+                  default:
+                    reject("Unknown location error");
+                }
+              },
+              {
+                enableHighAccuracy: false,
+                timeout: 10000,
+                maximumAge: 0
+              }
+            );
+          });
+        }
+
+        async function punchIn() {
+          try {
+            const button = document.getElementById("punchButton");
+            button.classList.add("loading");
+
+            const location = await getCurrentLocation().catch(error => {
+              console.warn("Location access failed:", error);
+              return null;
+            });
+
+            const response = await fetch('/dashboard/employee/punch-in', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                latitude: location?.latitude || null,
+                longitude: location?.longitude || null
+              })
+            });
+
+            const data = await response.json();
+            button.classList.remove("loading");
+
+            if (response.ok) {
+              Swal.fire({
+                title: "✅ Success!",
+                text: data.message,
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire("Error!", data.message, "error");
+            }
+          } catch (err) {
+            document.getElementById("punchButton").classList.remove("loading");
+            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+          }
+        }
+
+        function confirmPunchOut() {
+          Swal.fire({
+            title: "Confirm Punch Out",
+            text: "Are you sure you want to punch out?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Punch Out",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d33"
+          }).then(result => {
+            if (result.isConfirmed) punchOut();
+          });
+        }
+
+        async function punchOut() {
+          try {
+            const button = document.getElementById("punchButton");
+            button.classList.add("loading");
+
+            const response = await fetch('/dashboard/employee/punch-out', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+
+            button.classList.remove("loading");
+
+            if (response.ok) {
+              Swal.fire({
+                title: "Success!",
+                text: data.message,
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire("Error!", data.message, "error");
+            }
+          } catch (error) {
+            document.getElementById("punchButton").classList.remove("loading");
+            Swal.fire("Server Error!", "Something went wrong.", "error");
+          }
+        }
+
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeModal();
+        });
+      </script>
+  </body>
+
+  </html>

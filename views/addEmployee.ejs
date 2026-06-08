@@ -1,225 +1,247 @@
 <%- include('./partials/hrsidebar') %>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Add Employee</title>
-  <!-- Bootstrap CSS for basic styling -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    body {
-      font-family: Open Sans, sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    font-style: normal;
-    font-stretch: normal;
-    line-height: normal;
-    letter-spacing: normal;
-    text-align: left;
-    color: #3b4452;
-    background-color: #f7f7f7;
-    }
-    .container {
-      max-width: 800px;
-      margin: 30px auto;
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #333;
-    }
-    label {
-      font-weight: 600;
-      color: #555;
-    }
-    input[type="text"],
-    input[type="number"],
-    input[type="date"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    input[type="file"] {
-      margin-bottom: 20px;
-    }
-    button[type="submit"] {
-      background-color: #007bff;
-      color: #fff;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
-    }
-    button[type="submit"]:hover {
-      background-color: #0056b3;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>Add Employee</h2>
-    <form id="addEmployeeForm" action="/dashboard/hr/addEmployee" method="POST" enctype="multipart/form-data">
-      <div class="form-group">
-        <label for="full_name">Full Name:</label>
-        <input type="text" name="full_name" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label for="phone">Phone:</label>
-        <input type="text" name="phone" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="designation">Designation:</label>
-        <input type="text" name="designation" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="role">Role:</label>
-        <select id="role" name="role" >
-            <option value="" disabled selected>Select Role</option>
-            <option value="sales">Sales</option>
-            <option value="acquisition">Acquisition</option>
-            <option value="admin">Admin</option>
-            <option value="Screen_creator">Screen_creator</option>
-            <option value="maintenance">maintenance</option>
-             <option value="IT_Team">IT_Team</option>
-             <option value="Office_staff">Office_staff</option>
-             <option value="telly_sales">telly_sales</option>
-             <option value="graphic_team">graphic_team</option>
-             <option value="POP_team">POP_team</option>
-        </select>
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Add Employee</title>
+    <!-- Bootstrap CSS for basic styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+      body {
+        font-family: Open Sans, sans-serif;
+        font-size: 14px;
+        font-weight: 400;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: normal;
+        letter-spacing: normal;
+        text-align: left;
+        color: #3b4452;
+        background-color: #f7f7f7;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 30px auto;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+      }
+
+      label {
+        font-weight: 600;
+        color: #555;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      input[type="file"] {
+        margin-bottom: 20px;
+      }
+
+      button[type="submit"] {
+        background-color: #007bff;
+        color: #fff;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+
+      button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>Add Employee</h2>
+      <form id="addEmployeeForm" action="/dashboard/hr/addEmployee" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="full_name">Full Name:</label>
+          <input type="text" name="full_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone:</label>
+          <input type="text" name="phone" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="designation">Designation:</label>
+          <input type="text" name="designation" class="form-control">
+        </div>
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="role">Role:</label>
+            <select id="role" name="role">
+              <option value="" disabled selected>Select Role</option>
+              <option value="sales">Sales</option>
+              <option value="acquisition">Acquisition</option>
+              <option value="admin">Admin</option>
+              <option value="Screen_creator">Screen_creator</option>
+              <option value="maintenance">maintenance</option>
+              <option value="IT_Team">IT_Team</option>
+              <option value="Office_staff">Office_staff</option>
+              <option value="telly_sales">telly_sales</option>
+              <option value="graphic_team">graphic_team</option>
+              <option value="POP_team">POP_team</option>
+            </select>
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="employment_status">Employment Status:</label>
+            <select id="employment_status" name="employment_status" required>
+              <option value="" disabled selected>Select Employment Status</option>
+              <option value="probation">Probation</option>
+              <option value="intern">Intern</option>
+              <option value="full-time">Full Time</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="joining_date">Joining Date:</label>
+          <input type="date" name="joining_date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="resign_date">Resign Date:</label>
+          <input type="date" name="resign_date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="dob">Date of Birth:</label>
+          <input type="date" name="dob" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="alt_phone">Alternate Phone:</label>
+          <input type="text" name="alt_phone" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="city">City:</label>
+          <input type="text" name="city" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="ctc">CTC:</label>
+          <input type="number" name="ctc" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="bank_number">Bank Account Number:</label>
+          <input type="text" name="bank_number" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="ifsc">IFSC Code:</label>
+          <input type="text" name="ifsc" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="passbook_image">Passbook Image:</label>
+          <input type="file" name="passbook_image" class="form-control-file">
+        </div>
+        <div class="form-group">
+          <label for="pan_card">PAN Card:</label>
+          <input type="file" name="pan_card" class="form-control-file">
+        </div>
+        <div class="form-group">
+          <label for="aadhar_card">Aadhar Card:</label>
+          <input type="file" name="aadhar_card" class="form-control-file">
+        </div>
+        <div class="form-group">
+          <label for="last_company_name">Last Company Name:</label>
+          <input type="text" name="last_company_name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="offer_letter">Offer Letter:</label>
+          <input type="file" name="offer_letter" class="form-control-file">
+        </div>
+        <div class="form-group">
+          <label for="photo">Photo:</label>
+          <input type="file" name="photo" class="form-control-file">
+        </div>
+        <div class="form-group">
+          <label for="last_company_experience_letter">Last Company Experience Letter:</label>
+          <input type="file" name="last_company_experience_letter" class="form-control-file">
+        </div>
+        <button type="submit">Submit</button>
+      </form>
     </div>
-      <div class="form-group">
-        <label for="joining_date">Joining Date:</label>
-        <input type="date" name="joining_date" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="resign_date">Resign Date:</label>
-        <input type="date" name="resign_date" class="form-control">
-      </div>
-      <div class="form-group">
-        <label for="dob">Date of Birth:</label>
-        <input type="date" name="dob" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="alt_phone">Alternate Phone:</label>
-        <input type="text" name="alt_phone" class="form-control">
-      </div>
-      <div class="form-group">
-        <label for="city">City:</label>
-        <input type="text" name="city" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="ctc">CTC:</label>
-        <input type="number" name="ctc" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="bank_number">Bank Account Number:</label>
-        <input type="text" name="bank_number" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="ifsc">IFSC Code:</label>
-        <input type="text" name="ifsc" class="form-control" >
-      </div>
-      <div class="form-group">
-        <label for="passbook_image">Passbook Image:</label>
-        <input type="file" name="passbook_image" class="form-control-file" >
-      </div>
-      <div class="form-group">
-        <label for="pan_card">PAN Card:</label>
-        <input type="file" name="pan_card" class="form-control-file" >
-      </div>
-      <div class="form-group">
-        <label for="aadhar_card">Aadhar Card:</label>
-        <input type="file" name="aadhar_card" class="form-control-file" >
-      </div>
-      <div class="form-group">
-        <label for="last_company_name">Last Company Name:</label>
-        <input type="text" name="last_company_name" class="form-control">
-      </div>
-      <div class="form-group">
-        <label for="offer_letter">Offer Letter:</label>
-        <input type="file" name="offer_letter" class="form-control-file">
-      </div>
-      <div class="form-group">
-        <label for="photo">Photo:</label>
-        <input type="file" name="photo" class="form-control-file" >
-      </div>
-      <div class="form-group">
-        <label for="last_company_experience_letter">Last Company Experience Letter:</label>
-        <input type="file" name="last_company_experience_letter" class="form-control-file">
-      </div>
-      <button type="submit">Submit</button>
-    </form>
-  </div>
 
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
- document.getElementById("addEmployeeForm").addEventListener("submit", async function(event) {
-    event.preventDefault(); // Prevent default form submission
+    <script>
+      document.getElementById("addEmployeeForm").addEventListener("submit", async function (event) {
+        event.preventDefault(); // Prevent default form submission
 
-    const formData = new FormData(this);
+        const formData = new FormData(this);
 
-    // ✅ Log FormData to check if files are being captured
-    for (const [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-    }
-
-    Swal.fire({
-        title: "Are you sure?",
-        text: "Do you want to add this employee?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, Add",
-        cancelButtonText: "Cancel"
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch("/dashboard/hr/addEmployee", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: "Employee added successfully!",
-                        icon: "success",
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.href = "/dashboard/hr/employees/list";
-                    });
-                } else {
-                    Swal.fire({
-                        title: "Error!",
-                        text: result.error || "Failed to add employee!",
-                        icon: "error"
-                    });
-                }
-            } catch (error) {
-                Swal.fire({
-                    title: "Error!",
-                    text: "Something went wrong!",
-                    icon: "error"
-                });
-            }
+        // ✅ Log FormData to check if files are being captured
+        for (const [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
         }
-    });
-});
-</script>
 
-</body>
-</html>
+        Swal.fire({
+          title: "Are you sure?",
+          text: "Do you want to add this employee?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, Add",
+          cancelButtonText: "Cancel"
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              const response = await fetch("/dashboard/hr/addEmployee", {
+                method: "POST",
+                body: formData
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                Swal.fire({
+                  title: "Success!",
+                  text: "Employee added successfully!",
+                  icon: "success",
+                  timer: 2000,
+                  showConfirmButton: false
+                }).then(() => {
+                  window.location.href = "/dashboard/hr/employees/list";
+                });
+              } else {
+                Swal.fire({
+                  title: "Error!",
+                  text: result.error || "Failed to add employee!",
+                  icon: "error"
+                });
+              }
+            } catch (error) {
+              Swal.fire({
+                title: "Error!",
+                text: "Something went wrong!",
+                icon: "error"
+              });
+            }
+          }
+        });
+      });
+    </script>
+
+  </body>
+
+  </html>

@@ -30,6 +30,13 @@
     <label>Designation:</label>
     <input type="text" name="designation" value="<%= employee.designation %>">
 
+    <label>Employment Status:</label>
+    <select name="employment_status">
+        <option value="probation" <%= employee.employment_status === 'probation' ? 'selected' : '' %>>Probation</option>
+        <option value="intern" <%= employee.employment_status === 'intern' ? 'selected' : '' %>>Intern</option>
+        <option value="full-time" <%= employee.employment_status === 'full-time' ? 'selected' : '' %>>Full Time</option>
+    </select>
+
     <label>Joining Date:</label>
     <input type="date" name="joining_date" value="<%= employee.joining_date ? employee.joining_date.toISOString().split('T')[0] : '' %>">
 

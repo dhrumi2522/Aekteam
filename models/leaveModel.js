@@ -95,8 +95,6 @@ exports.applyLeave = async ({ emp_id, start_date, end_date, leave_type, half_day
     return leaveResult.rows[0]; // Return the leave application details
 };
 
-
-
 // ✅ List Leaves with Filters
 exports.getLeaves = async (filters) => {
     let query = `SELECT * FROM leaves WHERE 1=1`;
@@ -166,36 +164,43 @@ exports.updateLeaveStatus = async (leave_id, status, hr_id) => {
 
     // 🔹 Deduct leave balance ONLY IF:
     // ✅ status = approved                                                             
-    // ✅ leave_type is NOT Paid                                            
-    if (
-        status.toLowerCase() === "approved" &&
-        leave_type.toLowerCase() !== "paid"
-    ) {
-        const balanceQuery = `
-            SELECT leave_balance
-            FROM employees
-            WHERE emp_id = $1;
-        `;
-        const balanceResult = await pool.query(balanceQuery, [emp_id]);
+    // ✅ leave_type is NOT Paid
+    if (status.toLowerCase() === "approved") {
+        const lowerType = leave_type.toLowerCase();
+        let columnToUpdate = null;
 
-        if (balanceResult.rows.length === 0) {
-            throw new Error("Employee not found");
+        if (lowerType.includes("festival")) {
+            columnToUpdate = "festival_balance";
+        } else if (!lowerType.includes("paid")) {
+            columnToUpdate = "leave_balance";
         }
 
-        const currentBalance = parseFloat(balanceResult.rows[0].leave_balance);
-        const newBalance = currentBalance - days;
+        if (columnToUpdate) {
+            const balanceQuery = `
+                SELECT leave_balance, festival_balance
+                FROM employees
+                WHERE emp_id = $1;
+            `;
+            const balanceResult = await pool.query(balanceQuery, [emp_id]);
 
-        // ⚠️ Optional warning if negative
-        if (newBalance < 0) {
-            console.warn(`⚠️ Leave balance negative for emp_id: ${emp_id}`);
+            if (balanceResult.rows.length === 0) {
+                throw new Error("Employee not found");
+            }
+
+            const currentBalance = parseFloat(balanceResult.rows[0][columnToUpdate] || 0);
+            const newBalance = currentBalance - days;
+
+            if (newBalance < 0) {
+                console.warn(`⚠️ ${columnToUpdate} negative for emp_id: ${emp_id}`);
+            }
+
+            const deductQuery = `
+                UPDATE employees
+                SET ${columnToUpdate} = $1
+                WHERE emp_id = $2;
+            `;
+            await pool.query(deductQuery, [newBalance, emp_id]);
         }
-
-        const deductQuery = `
-            UPDATE employees
-            SET leave_balance = $1
-            WHERE emp_id = $2;
-        `;
-        await pool.query(deductQuery, [newBalance, emp_id]);
     }
 
     return updatedLeave;
@@ -211,6 +216,7 @@ exports.getPendingLeaves = async () => {
             l.leave_type,
             l.start_date,
             l.end_date,
+            l.half_day,
             l.reason,
             l.status,
             e.name AS employee_name
@@ -241,14 +247,22 @@ exports.getPendingLeaves = async () => {
 //     const result = await pool.query(query);
 //     return result.rows;
 //   };
-  
 
 
-// ✅ Auto Add 1.5 Leaves Every Month (CRON Job)
+
+// ✅ Auto Add Leaves Every Month (CRON Job) based on employment status
 exports.addMonthlyLeaveBonus = async () => {
     const query = `
         UPDATE employees 
-        SET leave_balance = LEAST(leave_balance + 1.5, 30) 
+        SET leave_balance = LEAST(
+            leave_balance + CASE 
+                WHEN LOWER(employment_status) = 'probation' THEN 0.5
+                WHEN LOWER(employment_status) = 'intern' THEN 0.0
+                WHEN LOWER(employment_status) = 'full-time' THEN 1.5
+                ELSE 1.5
+            END, 
+            30
+        ) 
         WHERE role != 'HR';
     `;
     await pool.query(query);
@@ -263,6 +277,7 @@ exports.getEmployeeLeaveData = async (emp_id) => {
         e.emp_id,
         e.name,
         e.leave_balance,
+        e.festival_balance,
         COALESCE(SUM(
             CASE 
                 WHEN l.half_day IN ('1st half', '2nd half') THEN 0.5
@@ -273,9 +288,10 @@ exports.getEmployeeLeaveData = async (emp_id) => {
     LEFT JOIN leaves l 
         ON l.emp_id = e.emp_id 
         AND l.status = 'approved'
+        AND LOWER(l.leave_type) NOT LIKE '%paid%'
         AND DATE_PART('year', l.start_date) = $2
     WHERE e.emp_id = $1
-    GROUP BY e.emp_id, e.name, e.leave_balance;
+    GROUP BY e.emp_id, e.name, e.leave_balance, e.festival_balance;
     `;
     const result = await pool.query(query, [emp_id, currentYear]);
     return result.rows[0];
@@ -339,7 +355,7 @@ exports.getLeaveHistory = async ({ emp_id, start_date, end_date }) => {
     try {
         const query = `
             SELECT 
-                leaves.id, employees.emp_id, employees.name, leaves.leave_type, leaves.start_date, leaves.end_date, leaves.status 
+                leaves.id, employees.emp_id, employees.name, leaves.leave_type, leaves.half_day, leaves.start_date, leaves.end_date, leaves.status 
             FROM leaves
             JOIN employees ON leaves.emp_id = employees.emp_id
             WHERE leaves.emp_id = $1 

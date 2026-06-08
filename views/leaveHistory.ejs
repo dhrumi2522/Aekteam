@@ -193,6 +193,7 @@ td[colspan="6"] {
                     <th>Employee ID</th>
                     <th>Name</th>
                     <th>Leave Type</th>
+                    <th>Day Type</th>
                     <th>Start Date</th>
                     <th>End Date</th>
                     <th>Status</th>
@@ -205,6 +206,9 @@ td[colspan="6"] {
                             <td><%= leave.emp_id %></td>
                             <td><%= leave.name %></td>
                             <td><%= leave.leave_type %></td>
+                            <td>
+                                <%= leave.half_day || 'Full Day' %>
+                            </td>
                             <td><%= new Date(leave.start_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) %></td>
                             <td><%= new Date(leave.end_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) %></td>
                             
@@ -213,7 +217,7 @@ td[colspan="6"] {
                     <% }) %>
                 <% } else { %>
                     <tr>
-                        <td colspan="6">No leave records found for the selected employee.</td>
+                        <td colspan="7">No leave records found for the selected employee.</td>
                     </tr>
                 <% } %>
             </tbody>
