@@ -370,3 +370,10 @@ exports.getLeaveHistory = async ({ emp_id, start_date, end_date }) => {
         throw error;
     }
 };
+
+// ✅ Fetch festival leaves in date range
+exports.getFestivalLeavesByRange = async (start_date, end_date) => {
+    const query = "SELECT leave_date FROM festival_leaves WHERE leave_date BETWEEN $1 AND $2";
+    const result = await pool.query(query, [start_date, end_date]);
+    return result.rows;
+};

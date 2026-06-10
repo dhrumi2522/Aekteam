@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Approve Permissions</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <%- include('./partials/hrsidebar') %> 
@@ -42,10 +43,10 @@
                                 <td><%= permission.reason %></td>
                                 <td><span class="badge bg-warning text-dark"><%= permission.status %></span></td>
                                 <td>
-                                    <form action="/dashboard/hr/approvePermission/<%= permission.id %>" method="POST" class="d-inline">
+                                    <form action="/dashboard/hr/approvePermission/<%= permission.id %>" method="POST" class="approve-form d-inline">
                                         <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                     </form>
-                                    <form action="/dashboard/hr/rejectPermission/<%= permission.id %>" method="POST" class="d-inline">
+                                    <form action="/dashboard/hr/rejectPermission/<%= permission.id %>" method="POST" class="reject-form d-inline">
                                         <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                     </form>
                                 </td>
@@ -169,5 +170,70 @@ h2 {
 
     </style>
     
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Confirm Approve
+            const approveForms = document.querySelectorAll('.approve-form');
+            approveForms.forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Approve Request?',
+                        text: "Are you sure you want to approve this regularization/permission request?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Approve',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loader
+                            Swal.fire({
+                                title: "Processing...",
+                                html: "Please wait while we approve the request.",
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
+            // Confirm Reject
+            const rejectForms = document.querySelectorAll('.reject-form');
+            rejectForms.forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Reject Request?',
+                        text: "Are you sure you want to reject this regularization/permission request?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Reject',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loader
+                            Swal.fire({
+                                title: "Processing...",
+                                html: "Please wait while we reject the request.",
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>

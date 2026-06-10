@@ -1,6 +1,7 @@
 // leaveController.js
 const pool = require("../config/db");
 const employeeModel = require('../models/employeeModel');
+const leaveModel = require("../models/leaveModel");
 
 // Apply Leave
 exports.applyLeave = async (req, res) => {
@@ -32,6 +33,24 @@ exports.applyLeave = async (req, res) => {
         } else if (leave_type === 'Festival Leave') {
             if (festivalBalance < requestedDays) {
                 return res.status(400).json({ success: false, message: `Insufficient Festival Leave balance. You only have ${festivalBalance} days remaining.` });
+            }
+
+            const moment = require("moment");
+            const requestedDates = [];
+            let curr = moment(start_date);
+            const end = moment(end_date);
+            while (curr.isSameOrBefore(end, 'day')) {
+                requestedDates.push(curr.format('YYYY-MM-DD'));
+                curr.add(1, 'day');
+            }
+
+            const dbResult = await leaveModel.getFestivalLeavesByRange(start_date, end_date);
+            const festivalDates = dbResult.map(row => moment(row.leave_date).format('YYYY-MM-DD'));
+
+            for (const reqDate of requestedDates) {
+                if (!festivalDates.includes(reqDate)) {
+                    return res.status(400).json({ success: false, message: "This day is not in festival day" });
+                }
             }
         }
 
@@ -149,6 +168,12 @@ exports.applyPermission = async (req, res) => {
 
         if (!emp_id || !type || !from_time || !to_time || !reason) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
+        }
+
+        // Check for duplicate permission request
+        const duplicateExists = await employeeModel.checkDuplicatePermission(emp_id, from_time, to_time);
+        if (duplicateExists) {
+            return res.status(400).json({ success: false, error: "Already applied for this date and time" });
         }
 
         await employeeModel.applyPermission(emp_id, type, from_time, to_time, reason);

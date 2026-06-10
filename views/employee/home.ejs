@@ -709,7 +709,7 @@
                         const currentEmpId = "<%= employee.emp_id %>";
                         const hasFullDayLeave = data.leaves.some(leave => {
                             if (leave.emp_id !== currentEmpId) return false;
-                            if (leave.half_day && leave.half_day !== '') return false;
+                            if (leave.half_day && leave.half_day !== '' && leave.half_day !== 'false' && leave.half_day !== false) return false;
                             if (!leave.start_date || !leave.end_date) return false;
 
                             const fromStr = toKolkataDateStr(leave.start_date);

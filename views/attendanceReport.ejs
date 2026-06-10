@@ -296,14 +296,12 @@
               <div class="flex-1 text-xs text-gray-500 leading-6">
                 <span class="inline-block bg-orange-100 text-orange-700 px-2 py-0.5 rounded mr-1 font-medium">Taken
                   Leave × 1</span> +
-                <span class="inline-block bg-red-100 text-red-600 px-2 py-0.5 rounded mx-1 font-medium">Absent (no
-                  punch) × 1</span> +
                 <span class="inline-block bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded mx-1 font-medium">Half Days
-                  × 0.5</span>
-                <br><span class="text-gray-400 mt-1 block">⚠️ Festival Leave &amp; Weekend Off are NOT counted in this
-                  total</span>
-                <span class="text-gray-400 block">✅ Absent (no punch, no approved leave) IS included — e.g. 3 Leave + 2
-                  Absent = 5.0</span>
+                  × 0.5</span> +
+                <span class="inline-block bg-blue-100 text-blue-700 px-2 py-0.5 rounded mx-1 font-medium">Festival Leave
+                  × 1</span>
+                <br><span class="text-gray-400 mt-1 block">⚠️ Absent (no punch) &amp; Weekend Off are NOT counted in
+                  this total</span>
               </div>
             </div>
           </div>
@@ -460,7 +458,8 @@
               Total Leave Count: <span class="text-2xl font-bold">
                 <%= (summary.totalLeaveCount || 0).toFixed(1) %>
               </span>
-              <span class="text-xs text-gray-500 ml-2">(Taken Leave + Absent + Half Days×0.5) — Festival &amp; Weekend
+              <span class="text-xs text-gray-500 ml-2">(Taken Leave + Half Days×0.5 + Festival Leave) — Absent &amp;
+                Weekend
                 NOT included</span>
             </p>
           </div>
@@ -609,21 +608,51 @@
     <!-- Modal: Attendance Details -->
     <div id="attendanceDetailModal"
       class="modal fixed inset-0 bg-gray-900 bg-opacity-50 justify-center items-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl relative flex flex-col" style="max-height: 85vh;">
-        <h3 class="text-lg font-bold mb-3 text-blue-700" id="attModalTitle">Attendance Details</h3>
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl relative flex flex-col" style="max-height: 85vh;">
+        <h3 class="text-xl font-bold text-center text-indigo-700 mb-1" id="attModalTitle">Attendance Details</h3>
+        <p class="text-xs text-gray-500 text-center mb-4 font-semibold" id="attModalSubtitle"></p>
+
+        <!-- Summary Cards inside Modal -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5 mb-4" id="attModalCards">
+          <div class="border border-green-200 bg-green-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-green-600 block mb-0.5">Present</span>
+            <span class="text-xl font-bold text-green-700 block" id="m_att_present">—</span>
+          </div>
+          <div class="border border-red-200 bg-red-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-red-600 block mb-0.5">Absent</span>
+            <span class="text-xl font-bold text-red-700 block" id="m_att_absent">—</span>
+          </div>
+          <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-amber-600 block mb-0.5">Official Leave</span>
+            <span class="text-xl font-bold text-amber-700 block" id="m_att_weekend">—</span>
+          </div>
+          <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-blue-600 block mb-0.5">Taken Leave</span>
+            <span class="text-xl font-bold text-blue-700 block" id="m_att_leave">—</span>
+          </div>
+          <div class="border border-gray-200 bg-gray-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-gray-600 block mb-0.5">Half Days</span>
+            <span class="text-xl font-bold text-gray-700 block" id="m_att_half">—</span>
+          </div>
+          <div class="border border-purple-200 bg-purple-50/50 rounded-xl p-2.5 text-center">
+            <span class="text-[11px] font-semibold text-purple-600 block mb-0.5">Festival Leave</span>
+            <span class="text-xl font-bold text-purple-700 block" id="m_att_festival">—</span>
+          </div>
+          <div class="border border-indigo-200 bg-indigo-50 rounded-xl p-2.5 text-center shadow-sm">
+            <span class="text-[11px] font-semibold text-indigo-600 block mb-0.5">Total Leave Count</span>
+            <span class="text-xl font-bold text-indigo-700 block" id="m_att_leaveCount">—</span>
+          </div>
+        </div>
+
         <div class="overflow-y-auto mb-4 border border-gray-100 rounded-lg shadow-inner" style="max-height: 60vh;">
           <table class="w-full text-sm">
-            <thead class="bg-gray-100 sticky top-0 border-b border-gray-200">
+            <thead class="bg-indigo-600 text-white sticky top-0">
               <tr>
-                <th class="py-2.5 px-3 text-left text-gray-600 font-semibold uppercase tracking-wider text-xs">Date</th>
-                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Day
-                </th>
-                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Punch
-                  In</th>
-                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Punch
-                  Out</th>
-                <th class="py-2.5 px-3 text-center text-gray-600 font-semibold uppercase tracking-wider text-xs">Status
-                </th>
+                <th class="py-2.5 px-3 text-left font-semibold uppercase tracking-wider text-xs">Date</th>
+                <th class="py-2.5 px-3 text-center font-semibold uppercase tracking-wider text-xs">Day</th>
+                <th class="py-2.5 px-3 text-center font-semibold uppercase tracking-wider text-xs">Punch In</th>
+                <th class="py-2.5 px-3 text-center font-semibold uppercase tracking-wider text-xs">Punch Out</th>
+                <th class="py-2.5 px-3 text-center font-semibold uppercase tracking-wider text-xs">Status</th>
               </tr>
             </thead>
             <tbody id="attendanceDetailTableBody"></tbody>
@@ -652,14 +681,13 @@
       // ================================================================
       // We rely 100% on the STATUS that the server model already computed.
       //
-      // Total Leave Count = Taken Leave + Absent + Half Days×0.5 + Festival
+      // Total Leave Count = Taken Leave + Half Days×0.5 + Festival Leave
       //   - Taken Leave : approved full-day leave
-      //   - Absent      : working day, no punch, no approved leave (also counted)
       //   - Half Days   : approved half-day leave × 0.5
-      //   - Festival    : public holiday
-      //   - Weekend     : Official Leave — NOT included in total leave count
+      //   - Festival    : public holiday (Festival Leave)
+      //   - Absent & Weekend: NOT included in total leave count
       //
-      // Example: 3 approved leaves + 2 absent days → Total = 3 + 2 = 5
+      // Example: 3 approved leaves + 1 festival leave → Total = 3 + 1 = 4.0
 
       function countFromServerData(rows) {
         // rows = array of { status, punch_in_time, punch_out_time, date, day, name, emp_id }
@@ -698,11 +726,9 @@
           }
         });
 
-        // ✅ FORMULA: Total Leave Count = Taken Leave + Absent (no-punch) + Half Days×0.5
-        // Festival Leave is shown separately — NOT included in total leave count
-        // Weekend Off (Official Leave) — NOT included
-        // Example: 3 Taken Leave + 2 Absent + 0 Half = 5.0
-        const totalLeaveCount = takenLeave + absent + (halfDay * 0.5);
+        // ✅ FORMULA: Total Leave Count = Taken Leave + Half Days×0.5 + Festival Leave
+        // Absent (no-punch) & Weekend Off (Official Leave) — NOT included
+        const totalLeaveCount = takenLeave + (halfDay * 0.5) + festival;
 
         return { present, absent, takenLeave, halfDay, festival, weekend, workDays, totalLeaveCount };
       }
@@ -768,29 +794,29 @@
         btn.classList.add('active');
       }
 
-  // If server returned range data → auto switch to range tab
-  const hasRangeFilters = '<%= (typeof filters !== "undefined" && filters && (filters.emp_id || filters.start_date)) ? "true" : "false" %>';
-  if (hasRangeFilters === 'true') {
-    (function () {
-      const rangeBtn = document.querySelector('[data-tab="range"]');
-      if (rangeBtn) switchTab('range', rangeBtn);
-    })();
-  }
-
-        // ================================================================
-        // INIT: Year dropdown + defaults
-        // ================================================================
-        (function initFilters() {
-          const yearSel = document.getElementById('m_year');
-          const now = new Date();
-          for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
-            const opt = document.createElement('option');
-            opt.value = y; opt.textContent = y;
-            yearSel.appendChild(opt);
-          }
-          yearSel.value = now.getFullYear();
-          document.getElementById('m_month').value = now.getMonth() + 1;
+      // If server returned range data → auto switch to range tab
+      const hasRangeFilters = '<%= (typeof filters !== "undefined" && filters && (filters.emp_id || filters.start_date)) ? "true" : "false" %>';
+      if (hasRangeFilters === 'true') {
+        (function () {
+          const rangeBtn = document.querySelector('[data-tab="range"]');
+          if (rangeBtn) switchTab('range', rangeBtn);
         })();
+      }
+
+      // ================================================================
+      // INIT: Year dropdown + defaults
+      // ================================================================
+      (function initFilters() {
+        const yearSel = document.getElementById('m_year');
+        const now = new Date();
+        for (let y = now.getFullYear(); y >= now.getFullYear() - 5; y--) {
+          const opt = document.createElement('option');
+          opt.value = y; opt.textContent = y;
+          yearSel.appendChild(opt);
+        }
+        yearSel.value = now.getFullYear();
+        document.getElementById('m_month').value = now.getMonth() + 1;
+      })();
 
       // ================================================================
       // RENDER SUMMARY CARDS (shared by single + all-emp)
@@ -1111,7 +1137,9 @@
         const modalTitle = document.getElementById("attModalTitle");
         const tbody = document.getElementById("attendanceDetailTableBody");
 
-        modalTitle.textContent = `Attendance Details — ${empName}`;
+        modalTitle.textContent = `${empName}'s Attendance Report`;
+        document.getElementById("attModalSubtitle").textContent = "Report Period: —";
+
         tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">Fetching latest attendance details...</td></tr>`;
         modal.classList.add("active");
 
@@ -1121,6 +1149,13 @@
             tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500 text-sm">Please select a valid date range first.</td></tr>`;
             return;
           }
+
+          // Format dates for display
+          const formatDateFmt = (dStr) => {
+            const date = new Date(dStr);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+          };
+          document.getElementById("attModalSubtitle").textContent = `Report Period: ${formatDateFmt(startDate)} to ${formatDateFmt(endDate)}`;
 
           // Fetch fresh daily records for this employee directly from database
           const res = await fetch(`/dashboard/hr/employeeAttendanceDetails?emp_id=${empId}&start_date=${startDate}&end_date=${endDate}`)
@@ -1132,6 +1167,16 @@
           if (rows.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400 text-sm">No attendance data found for this period</td></tr>`;
           } else {
+            // Calculate and display summary card counts
+            const counts = countFromServerData(rows);
+            document.getElementById("m_att_present").textContent = counts.present;
+            document.getElementById("m_att_absent").textContent = counts.absent;
+            document.getElementById("m_att_weekend").textContent = counts.weekend;
+            document.getElementById("m_att_leave").textContent = counts.takenLeave;
+            document.getElementById("m_att_half").textContent = counts.halfDay.toFixed(1);
+            document.getElementById("m_att_festival").textContent = counts.festival;
+            document.getElementById("m_att_leaveCount").textContent = counts.totalLeaveCount.toFixed(1);
+
             const sortedRows = [...rows].sort((a, b) => new Date(a.date) - new Date(b.date));
 
             sortedRows.forEach((row, i) => {

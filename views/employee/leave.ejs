@@ -518,7 +518,7 @@
                         </p>
                         <small>days remaining</small>
                     </div>
-                    <div class="leave-balance-card" style="border-top: 4px solid #fda085;">
+                    <div class="leave-balance-card">
                         <h3><i class="fas fa-umbrella-beach"></i> Festival Leave</h3>
                         <p>
                             <%= employeeData.festival_balance || 0 %>
@@ -641,6 +641,9 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', async () => {
+                // Set up date restrictions (disable past dates)
+                setupDateRestrictions();
+
                 // Initialize the CC dropdown
                 await initCCDropdown();
 
@@ -653,6 +656,29 @@
                 // Setup Festival Leave duration selection handling
                 setupFestivalDurationLogic();
             });
+
+            function setupDateRestrictions() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const minDate = `${year}-${month}-${day}`;
+
+                const startDateInput = document.getElementById('start_date');
+                const endDateInput = document.getElementById('end_date');
+                if (startDateInput && endDateInput) {
+                    startDateInput.min = minDate;
+                    endDateInput.min = minDate;
+
+                    // Update end date min when start date changes
+                    startDateInput.addEventListener('change', function () {
+                        endDateInput.min = this.value;
+                        if (endDateInput.value && endDateInput.value < this.value) {
+                            endDateInput.value = this.value;
+                        }
+                    });
+                }
+            }
 
             function setupFestivalDurationLogic() {
                 const leaveTypeSelect = document.getElementById('leave_type');
@@ -826,6 +852,16 @@
                         reason: document.getElementById("remark").value,
                         cc: selectedCC
                     };
+
+                    // Show loader dialog
+                    Swal.fire({
+                        title: "Submitting...",
+                        html: "Please wait while we submit your leave request.",
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
                     try {
                         const response = await fetch("/dashboard/employee/leave/apply", {

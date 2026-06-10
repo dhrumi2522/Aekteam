@@ -484,13 +484,13 @@ exports.getAttendanceReport = async ({ emp_id, start_date, end_date }) => {
       let status = "Absent"; // default
 
       // ✅ Priority 1: Festival Leave (highest priority)
-      if (festivalDates.includes(formattedDate)) {
-        status = "Festival Leave";
-      }
+      // if (festivalDates.includes(formattedDate)) {
+      //   status = "Festival Leave";
+      // }
 
       // ✅ Priority 2: Weekend → Always Official Leave (even if employee punched in)
       // Weekends should never be counted as Present, even if they worked
-      else if (isWeekend) {
+      if (isWeekend) {
         status = "Official Leave";
       }
 
@@ -648,6 +648,15 @@ exports.applyPermission = async (emp_id, type, from_time, to_time, reason) => {
     [emp_id, type, from_time, to_time, reason]
   );
 };
+
+exports.checkDuplicatePermission = async (emp_id, from_time, to_time) => {
+  const result = await pool.query(
+    "SELECT id FROM permissions WHERE emp_id = $1 AND from_time = $2 AND to_time = $3 AND status != 'Rejected'",
+    [emp_id, from_time, to_time]
+  );
+  return result.rows.length > 0;
+};
+
 
 exports.getActivePermission = async (emp_id, date) => {
   return pool.query(

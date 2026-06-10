@@ -306,11 +306,10 @@ exports.attendanceReport = async (req, res) => {
                     }
                 });
 
-                // ✅ FORMULA: Total Leave Count = Taken Leave + Absent (no-punch) + Half Days×0.5
-                // Festival and Weekend NOT counted in total
+                // ✅ FORMULA: Total Leave Count = Taken Leave + Half Days×0.5 + Festival Leave
                 summary = Object.values(empMap).map(emp => ({
                     ...emp,
-                    totalLeaveCount: emp.totalTakenLeave + emp.totalAbsent + emp.totalHalfDays
+                    totalLeaveCount: emp.totalTakenLeave + emp.totalHalfDays + emp.totalFestival
                 }));
             } else {
                 const totalPresent = attendanceData.filter((r) => r.status === "Present").length;
@@ -329,10 +328,8 @@ exports.attendanceReport = async (req, res) => {
                     totalTakenLeave,
                     totalHalfDays,
                     totalFestival,
-                    // ✅ FORMULA: Taken Leave + Absent (no-punch) + Half Days×0.5
-                    // Festival and Weekend NOT counted in total
-                    // Example: 3 Taken Leave + 2 Absent + 0 Half = 5.0
-                    totalLeaveCount: totalTakenLeave + totalAbsent + totalHalfDays,
+                    // ✅ FORMULA: Taken Leave + Half Days×0.5 + Festival Leave
+                    totalLeaveCount: totalTakenLeave + totalHalfDays + totalFestival,
                 };
             }
         }
@@ -470,9 +467,8 @@ exports.exportAttendanceReport = async (req, res) => {
             const totalTakenLeave = uniqueRecords.filter((r) => r.status === "Taken Leave").length;
             const totalHalfDay = uniqueRecords.filter((r) => r.status.includes("Half Day") && !r.status.includes("Paid")).length;
             const halfDayValue = totalHalfDay * 0.5;
-            // ✅ FORMULA: Total Leave = Taken Leave + Absent (no-punch) + Half Days×0.5
-            // Festival and Weekend are NOT included in total leave count
-            const totalLeaves = totalTakenLeave + totalAbsent + halfDayValue;
+            // ✅ FORMULA: Total Leave = Taken Leave + Half Days×0.5 + Festival Leave
+            const totalLeaves = totalTakenLeave + halfDayValue + totalFestival;
 
             worksheet.addRow({});
             worksheet.addRow(["Summary"]);
@@ -482,10 +478,10 @@ exports.exportAttendanceReport = async (req, res) => {
             worksheet.addRow(["Weekend Off (Official Leave)", totalOfficialLeave]);
             worksheet.addRow(["Taken Leave (Full Day)", totalTakenLeave]);
             worksheet.addRow(["Half-Day Leaves (0.5 each)", halfDayValue]);
-            worksheet.addRow(["Festival Leave (separate, not in total)", totalFestival]);
+            worksheet.addRow(["Festival Leave", totalFestival]);
             worksheet.addRow([]);
             worksheet.addRow(["Total Leave Count", totalLeaves]);
-            worksheet.addRow(["Formula", `Taken Leave(${totalTakenLeave}) + Absent(${totalAbsent}) + Half Days(${halfDayValue}) = ${totalLeaves}`]);
+            worksheet.addRow(["Formula", `Taken Leave(${totalTakenLeave}) + Half Days(${halfDayValue}) + Festival Leave(${totalFestival}) = ${totalLeaves}`]);
 
             worksheet.getRow(1).eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -604,18 +600,29 @@ exports.addFestivalLeave = async (req, res) => {
     try {
         const { leave_date, name } = req.body;
 
-        if (!leave_date || !name)
-            return res.status(400).send("Date and Name are required");
+        if (!leave_date || !name) {
+            return res.status(400).json({ success: false, message: "Date and Name are required" });
+        }
+
+        // Check if a festival leave already exists for the selected date
+        const duplicateCheck = await pool.query(
+            "SELECT id FROM festival_leaves WHERE leave_date = $1",
+            [leave_date]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+            return res.status(400).json({ success: false, message: "Festival leave is already added on this date!" });
+        }
 
         await pool.query(
             "INSERT INTO festival_leaves (leave_date, name) VALUES ($1, $2)",
             [leave_date, name]
         );
 
-        res.redirect("/dashboard/hr/festival-leaves");
+        res.json({ success: true, message: "Festival leave added successfully!" });
     } catch (error) {
         console.error("Error adding festival leave:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
@@ -623,10 +630,10 @@ exports.deleteFestivalLeave = async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query("DELETE FROM festival_leaves WHERE id = $1", [id]);
-        res.redirect("/dashboard/hr/festival-leaves");
+        res.json({ success: true, message: "Festival leave deleted successfully!" });
     } catch (error) {
         console.error("Error deleting festival leave:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
@@ -701,8 +708,6 @@ exports.approvePermission = async (req, res) => {
             return res.status(404).json({ message: "Permission not found" });
         }
 
-        console.log("Fetched Permission Data:", permission);
-
         const attendanceDate = moment(permission.from_time).format("YYYY-MM-DD");
 
         if (!attendanceDate) {
@@ -712,17 +717,14 @@ exports.approvePermission = async (req, res) => {
 
         await employeeModel.updatePermissionStatus(permissionId, "Approved");
 
-        if (permission.type.toLowerCase() === "regularization") {
-            console.log("Updating attendance for:", permission.emp_id, "on", attendanceDate);
-
+        const allowedTypes = ["regularization", "on duty", "wfh", "short break", "late in", "early out"];
+        if (allowedTypes.includes(permission.type.toLowerCase())) {
             await employeeModel.updatePunchInOut(
                 permission.emp_id,
                 attendanceDate,
                 permission.from_time,
                 permission.to_time
             );
-        } else {
-            console.warn("⚠️ Permission type is not 'Regularization'.");
         }
 
         res.redirect("/dashboard/hr/approvePermission");
@@ -880,7 +882,8 @@ exports.postHrApplyLeave = async (req, res) => {
         const employee = await employeeModel.findEmployee(emp_id);
 
         try {
-            await sendLeaveAppliedMail(employee, leave);
+            // Send Email to HR (Commented out)
+            // await sendLeaveAppliedMail(employee, leave);
         } catch (emailError) {
             console.error("Failed to send email:", emailError);
         }

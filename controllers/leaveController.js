@@ -35,6 +35,24 @@ exports.applyLeave = async (req, res) => {
             if (festivalBalance < requestedDays) {
                 return res.status(400).json({ success: false, message: `Insufficient Festival Leave balance. You only have ${festivalBalance} days remaining.` });
             }
+
+            const moment = require("moment");
+            const requestedDates = [];
+            let curr = moment(start_date);
+            const end = moment(end_date);
+            while (curr.isSameOrBefore(end, 'day')) {
+                requestedDates.push(curr.format('YYYY-MM-DD'));
+                curr.add(1, 'day');
+            }
+
+            const dbResult = await leaveModel.getFestivalLeavesByRange(start_date, end_date);
+            const festivalDates = dbResult.map(row => moment(row.leave_date).format('YYYY-MM-DD'));
+
+            for (const reqDate of requestedDates) {
+                if (!festivalDates.includes(reqDate)) {
+                    return res.status(400).json({ success: false, message: "This day is not in festival day" });
+                }
+            }
         }
 
         // Check for overlapping leaves
@@ -78,8 +96,8 @@ exports.applyLeave = async (req, res) => {
             reason
         });
 
-        // Send Email to HR
-        await sendLeaveAppliedMail(employee, leave);
+        // Send Email to HR (Commented out)
+        // await sendLeaveAppliedMail(employee, leave);
 
         res.json({ success: true, message: "Leave applied successfully, HR notified!", leave });
 

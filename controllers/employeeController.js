@@ -211,6 +211,12 @@ exports.applyPermission = async (req, res) => {
             return res.redirect("/dashboard/employee/apply-permission?error=Employee ID missing");
         }
 
+        // Check for duplicate permission request
+        const duplicateExists = await employeeModel.checkDuplicatePermission(emp_id, from_time, to_time);
+        if (duplicateExists) {
+            return res.redirect("/dashboard/employee/RegularizationPage?error=" + encodeURIComponent("Already applied for this date and time"));
+        }
+
         await employeeModel.applyPermission(emp_id, type, from_time, to_time, reason);
 
         // Redirect with success message

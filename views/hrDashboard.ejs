@@ -622,7 +622,7 @@
     <div class="dashboard-container fade-in">
       <!-- Header -->
       <div class="dashboard-header">
-        <h2>Welcome, <%= user.name %>
+        <h2>Welcome, <%= employee.name %>
         </h2>
         <p>HR Dashboard - Employee Management & Analytics</p>
       </div>
@@ -790,6 +790,46 @@
         // Punch Functions
         async function checkPunchStatus() {
           try {
+            // Check if current employee has an approved full-day leave today
+            const leaveResponse = await fetch('/dashboard/employee/leave/list?status=approved', {
+              method: 'GET',
+              credentials: 'include'
+            });
+            const leaveData = await leaveResponse.json();
+
+            if (leaveData.success && leaveData.leaves.length > 0) {
+              const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              });
+              const todayStr = formatter.format(new Date());
+
+              const toKolkataDateStr = (dateInput) => {
+                if (!dateInput) return '';
+                return formatter.format(new Date(dateInput));
+              };
+
+              const currentEmpId = "<%= employee.emp_id %>";
+              const hasFullDayLeave = leaveData.leaves.some(leave => {
+                if (leave.emp_id !== currentEmpId) return false;
+                if (leave.half_day && leave.half_day !== '' && leave.half_day !== 'false' && leave.half_day !== false) return false;
+                if (!leave.start_date || !leave.end_date) return false;
+
+                const fromStr = toKolkataDateStr(leave.start_date);
+                const toStr = toKolkataDateStr(leave.end_date);
+
+                return fromStr <= todayStr && toStr >= todayStr;
+              });
+
+              if (hasFullDayLeave) {
+                const punchButton = document.getElementById("punchButton");
+                punchButton.outerHTML = `<span id="punchButton" style="color: #6c757d; font-weight: 600; font-size: 16px;">You are on leave</span>`;
+                return;
+              }
+            }
+
             const response = await fetch('/dashboard/employee/punch-status', {
               method: 'GET',
               credentials: 'include'
