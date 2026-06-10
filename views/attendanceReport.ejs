@@ -570,7 +570,7 @@
                               </td>
                               <td class="py-3 px-4 text-center">
                                 <button type="button"
-                                  onclick="event.stopPropagation(); showAttendanceDetailModal('<%= s.emp_id %>', '<%= s.name.replace(/'/g, `\\'`) %>')"
+                                  onclick="event.stopPropagation(); showAttendanceDetailModal('<%= s.emp_id %>', '<%= s.name.replace(/\x27/g, String.fromCharCode(92, 39)) %>')"
                                   class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
                                   Attendance Detail
                                 </button>
