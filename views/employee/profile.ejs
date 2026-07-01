@@ -508,6 +508,10 @@
                         <span class="info-value"><%= employee.role || 'Not specified' %></span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">Employment Status:</span>
+                        <span class="info-value text-capitalize"><%= employee.employment_status || 'Not specified' %></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">Status:</span>
                         <span class="info-value status-badge status-active">Active</span>
                     </div>
@@ -591,9 +595,9 @@
                                 <div class="error-message" id="name-error">Please enter a valid name</div>
                             </div>
                             <div class="form-group">
-                                <label for="email" class="required">Email Address</label>
+                                <label for="email">Email Address</label>
                                 <input type="email" id="email" name="email" class="form-control" 
-                                       value="<%= employee.email %>" required>
+                                       value="<%= employee.email %>">
                                 <div class="error-message" id="email-error">Please enter a valid email address</div>
                             </div>
                         </div>
@@ -618,9 +622,9 @@
                         <h4 class="form-section-title"><i class="fas fa-briefcase"></i> Employment Information</h4>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="designation" class="required">Designation</label>
+                                <label for="designation">Designation</label>
                                 <input type="text" id="designation" name="designation" class="form-control" 
-                                       value="<%= employee.designation %>" required>
+                                       value="<%= employee.designation %>">
                                 <div class="error-message" id="designation-error">Please enter your designation</div>
                             </div>
                             <div class="form-group">
@@ -633,9 +637,9 @@
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="joining_date" class="required">Joining Date</label>
+                                <label for="joining_date">Joining Date</label>
                                 <input type="date" id="joining_date" name="joining_date" class="form-control"
-                                       value="<%= employee.joining_date ? new Date(employee.joining_date).toISOString().split('T')[0] : '' %>" required>
+                                       value="<%= employee.joining_date ? new Date(employee.joining_date).toISOString().split('T')[0] : '' %>">
                                 <div class="error-message" id="joining_date-error">Please enter a valid joining date</div>
                             </div>
                             <div class="form-group">
@@ -785,18 +789,26 @@
         function showError(inputId, errorId, message) {
             const input = document.getElementById(inputId);
             const error = document.getElementById(errorId);
-            input.classList.add('error');
-            input.classList.remove('success');
-            error.textContent = message;
-            error.style.display = 'block';
+            if (input) {
+                input.classList.add('error');
+                input.classList.remove('success');
+            }
+            if (error) {
+                error.textContent = message;
+                error.style.display = 'block';
+            }
         }
 
         function showSuccess(inputId, errorId) {
             const input = document.getElementById(inputId);
             const error = document.getElementById(errorId);
-            input.classList.remove('error');
-            input.classList.add('success');
-            error.style.display = 'none';
+            if (input) {
+                input.classList.remove('error');
+                input.classList.add('success');
+            }
+            if (error) {
+                error.style.display = 'none';
+            }
         }
 
         // Form submission validation
@@ -814,11 +826,15 @@
                 showSuccess('name', 'name-error');
             }
             
-            // Validate email
+            // Validate email (Optional: only check format if not empty)
             const email = document.getElementById('email').value;
-            if (!validateEmail(email)) {
-                showError('email', 'email-error', 'Please enter a valid email address');
-                isValid = false;
+            if (email.trim() !== "") {
+                if (!validateEmail(email)) {
+                    showError('email', 'email-error', 'Please enter a valid email address');
+                    isValid = false;
+                } else {
+                    showSuccess('email', 'email-error');
+                }
             } else {
                 showSuccess('email', 'email-error');
             }
@@ -841,23 +857,22 @@
                 showSuccess('dob', 'dob-error');
             }
             
-            // Validate designation
+            // Validate designation (Optional: do not require)
             const designation = document.getElementById('designation').value;
-            if (!designation.trim()) {
-                showError('designation', 'designation-error', 'Please enter your designation');
-                isValid = false;
-            } else {
-                showSuccess('designation', 'designation-error');
-            }
+            showSuccess('designation', 'designation-error');
             
-            // Validate joining date
+            // Validate joining date (Optional: only check if not empty)
             const joiningDate = document.getElementById('joining_date').value;
-            if (!validateDate(joiningDate)) {
-                showError('joining_date', 'joining_date-error', 'Please enter a valid joining date');
-                isValid = false;
-            } else if (!validateJoiningDate(joiningDate, dob)) {
-                showError('joining_date', 'joining_date-error', 'Joining date cannot be before date of birth');
-                isValid = false;
+            if (joiningDate.trim() !== "") {
+                if (!validateDate(joiningDate)) {
+                    showError('joining_date', 'joining_date-error', 'Please enter a valid joining date');
+                    isValid = false;
+                } else if (!validateJoiningDate(joiningDate, dob)) {
+                    showError('joining_date', 'joining_date-error', 'Joining date cannot be before date of birth');
+                    isValid = false;
+                } else {
+                    showSuccess('joining_date', 'joining_date-error');
+                }
             } else {
                 showSuccess('joining_date', 'joining_date-error');
             }

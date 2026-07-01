@@ -1,56 +1,95 @@
 // leaveController.js
 const pool = require("../config/db");
 const employeeModel = require('../models/employeeModel');
+const leaveModel = require("../models/leaveModel");
 
 // Apply Leave
 exports.applyLeave = async (req, res) => {
-  try {
-    const {
-      emp_id,
-      start_date,
-      end_date,
-      leave_type,
-      half_day,
-      reason,
-      cc
-    } = req.body;
+    try {
+        const {
+            emp_id,
+            start_date,
+            end_date,
+            leave_type,
+            half_day,
+            reason,
+            cc
+        } = req.body;
 
-    const applied_at = new Date();
-    const status = 'pending';
+        // Fetch employee details to verify leave balance
+        const employee = await employeeModel.findEmployee(emp_id);
+        if (!employee) {
+            return res.status(400).json({ success: false, message: "Employee not found." });
+        }
 
-    const result = await pool.query(
-      `INSERT INTO public.leaves (emp_id, start_date, end_date, leave_type, half_day, reason, status, applied_at, cc, days)
+        const requestedDays = calculateDays(start_date, end_date, half_day);
+        const leaveBalance = parseFloat(employee.leave_balance || 0);
+        const festivalBalance = parseFloat(employee.festival_balance || 0);
+
+        if (leave_type === 'Sick' || leave_type === 'Casual') {
+            if (leaveBalance < requestedDays) {
+                return res.status(400).json({ success: false, message: `Insufficient Casual/Sick Leave balance. You only have ${leaveBalance} days remaining.` });
+            }
+        } else if (leave_type === 'Festival Leave') {
+            if (festivalBalance < requestedDays) {
+                return res.status(400).json({ success: false, message: `Insufficient Festival Leave balance. You only have ${festivalBalance} days remaining.` });
+            }
+
+            const moment = require("moment");
+            const requestedDates = [];
+            let curr = moment(start_date);
+            const end = moment(end_date);
+            while (curr.isSameOrBefore(end, 'day')) {
+                requestedDates.push(curr.format('YYYY-MM-DD'));
+                curr.add(1, 'day');
+            }
+
+            const dbResult = await leaveModel.getFestivalLeavesByRange(start_date, end_date);
+            const festivalDates = dbResult.map(row => moment(row.leave_date).format('YYYY-MM-DD'));
+
+            for (const reqDate of requestedDates) {
+                if (!festivalDates.includes(reqDate)) {
+                    return res.status(400).json({ success: false, message: "This day is not in festival day" });
+                }
+            }
+        }
+
+        const applied_at = new Date();
+        const status = 'pending';
+
+        const result = await pool.query(
+            `INSERT INTO public.leaves (emp_id, start_date, end_date, leave_type, half_day, reason, status, applied_at, cc, days)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [
-        emp_id,
-        start_date,
-        end_date,
-        leave_type,
-        half_day,
-        reason,
-        status,
-        applied_at,
-        cc,
-        calculateDays(start_date, end_date, half_day)
-      ]
-    );
+            [
+                emp_id,
+                start_date,
+                end_date,
+                leave_type,
+                half_day,
+                reason,
+                status,
+                applied_at,
+                cc,
+                requestedDays
+            ]
+        );
 
-    res.json({ success: true, message: "Leave applied successfully", leave: result.rows[0] });
-  } catch (error) {
-    console.error('Error applying leave:', error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+        res.json({ success: true, message: "Leave applied successfully", leave: result.rows[0] });
+    } catch (error) {
+        console.error('Error applying leave:', error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 };
 
 // List Leaves
 exports.getLeaves = async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM public.leaves ORDER BY applied_at DESC`);
-    res.json({ success: true ,message: "successfully" , leaves: result.rows });
-  } catch (error) {
-    console.error('Error fetching leaves:', error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
+    try {
+        const result = await pool.query(`SELECT * FROM public.leaves ORDER BY applied_at DESC`);
+        res.json({ success: true, message: "successfully", leaves: result.rows });
+    } catch (error) {
+        console.error('Error fetching leaves:', error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 };
 
 //for cc in list show
@@ -67,32 +106,32 @@ exports.getEmployeeList = async (req, res) => {
 
 // Cancel Leave
 exports.cancelLeave = async (req, res) => {
-  try {
-    const { leaveId } = req.body;
+    try {
+        const { leaveId } = req.body;
 
-    const result = await pool.query(
-      `UPDATE public.leaves SET status = 'Canceled' WHERE id = $1 AND status = 'pending' RETURNING *`,
-      [leaveId]
-    );
+        const result = await pool.query(
+            `UPDATE public.leaves SET status = 'Canceled' WHERE id = $1 AND status = 'pending' RETURNING *`,
+            [leaveId]
+        );
 
-    if (result.rowCount === 0) {
-      return res.status(400).json({ success: false, message: "Leave not found or already processed" });
+        if (result.rowCount === 0) {
+            return res.status(400).json({ success: false, message: "Leave not found or already processed" });
+        }
+
+        res.json({ success: true, message: "Leave cancelled successfully", leave: result.rows[0] });
+    } catch (error) {
+        console.error('Error cancelling leave:', error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
-
-    res.json({ success: true, message: "Leave cancelled successfully", leave: result.rows[0] });
-  } catch (error) {
-    console.error('Error cancelling leave:', error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
 };
 
 // Helper to calculate leave days
 function calculateDays(start, end, half_day) {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  const timeDiff = endDate - startDate;
-  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
-  return half_day ? 0.5 : days;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const timeDiff = endDate - startDate;
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+    return half_day ? 0.5 : days;
 }
 
 
@@ -131,6 +170,12 @@ exports.applyPermission = async (req, res) => {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
 
+        // Check for duplicate permission request
+        const duplicateExists = await employeeModel.checkDuplicatePermission(emp_id, from_time, to_time);
+        if (duplicateExists) {
+            return res.status(400).json({ success: false, error: "Already applied for this date and time" });
+        }
+
         await employeeModel.applyPermission(emp_id, type, from_time, to_time, reason);
 
         res.json({ success: true, message: "Permission request submitted successfully" });
@@ -145,7 +190,7 @@ exports.applyPermission = async (req, res) => {
 exports.getPunchStatus = async (req, res) => {
     try {
         const emp_id = req.body.emp_id;
- console.log('✅ punch-status POST hit');
+        console.log('✅ punch-status POST hit');
         if (!emp_id) {
             return res.status(400).json({ message: "Employee ID missing" });
         }
@@ -159,7 +204,7 @@ exports.getPunchStatus = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-const moment = require('moment-timezone'); 
+const moment = require('moment-timezone');
 
 exports.getAttendanceByDate = async (req, res) => {
     try {
@@ -220,7 +265,7 @@ exports.getAttendanceByDate = async (req, res) => {
 
 // ✅ Get Profile (JSON API)
 exports.getProfileAPI = async (req, res) => {
-   try {
+    try {
         const { emp_id } = req.body;
 
         if (!emp_id) {
@@ -256,7 +301,7 @@ exports.getProfileAPI = async (req, res) => {
 
 // ✅ Update Profile (JSON API)
 exports.updateProfileAPI = async (req, res) => {
-     try {
+    try {
         const { emp_id, name, email, phone, dob, assign_city, designation, bank_number, ifsc } = req.body;
 
         if (!emp_id) {

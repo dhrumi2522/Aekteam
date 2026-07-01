@@ -31,8 +31,8 @@ const uploadPdfWithPreview = async (fileBuffer, fileName) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           cloud_name: 'dqfnwh89v',
-        api_key: '451893856554714',
-        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+          api_key: '451893856554714',
+          api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
           folder: 'acquisition_contracts',
           public_id: fileName.replace(/\.[^/.]+$/, ""),
           resource_type: 'auto', // ✅ Auto-detects PDF format
@@ -56,8 +56,8 @@ const uploadPdfWithPreview = async (fileBuffer, fileName) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           cloud_name: 'dqfnwh89v',
-        api_key: '451893856554714',
-        api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
+          api_key: '451893856554714',
+          api_secret: 'zgbspSZH8AucreQM8aL1AKN9S-Y',
           folder: 'acquisition_contracts',
           public_id: fileName.replace(/\.[^/.]+$/, "") + "_preview",
           resource_type: 'image',
@@ -97,7 +97,7 @@ const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 // Fix the private key newline escape
 credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
 
-            
+
 // Initialize Google Drive API authentication
 const auth = new google.auth.GoogleAuth({
   credentials,
@@ -158,7 +158,7 @@ const logAction = async (req, action, message, salesEnquiryId = null) => {
     console.error("Error logging action:", error);
     return null;
   }
-}; 
+};
 
 
 
@@ -176,17 +176,17 @@ router.get('/acquisition/DataList', verifyToken, async (req, res) => {
   const emp_id = req.query.emp_id; // Get emp_id from request query
 
   if (!emp_id) {
-      return res.status(400).json({ status: false, message: "emp_id is required" });
+    return res.status(400).json({ status: false, message: "emp_id is required" });
   }
 
   try {
-      const query = `SELECT * FROM acquisition WHERE emp_id = $1`;
-      const result = await pool.query(query, [emp_id]);
+    const query = `SELECT * FROM acquisition WHERE emp_id = $1`;
+    const result = await pool.query(query, [emp_id]);
 
-      res.status(200).json({ status: true, data: result.rows });
+    res.status(200).json({ status: true, data: result.rows });
   } catch (error) {
-      console.error('Error fetching data:', error);
-      res.status(500).json({ status: false, message: "Internal server error" });
+    console.error('Error fetching data:', error);
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
 });
 
@@ -194,21 +194,21 @@ router.get('/acquisition/details', verifyToken, async (req, res) => {
   const { id } = req.query;
 
   if (!id) {
-      return res.status(400).json({ status: false, message: "ID is required" });
+    return res.status(400).json({ status: false, message: "ID is required" });
   }
 
   try {
-      const query = `SELECT * FROM acquisition WHERE id = $1`;
-      const result = await pool.query(query, [id]);
+    const query = `SELECT * FROM acquisition WHERE id = $1`;
+    const result = await pool.query(query, [id]);
 
-      if (result.rowCount === 0) {
-          return res.status(404).json({ status: false, message: "No property found" });
-      }
+    if (result.rowCount === 0) {
+      return res.status(404).json({ status: false, message: "No property found" });
+    }
 
-      res.status(200).json({ status: true, data: result.rows[0] });
+    res.status(200).json({ status: true, data: result.rows[0] });
   } catch (error) {
-      console.error("Error fetching property:", error);
-      res.status(500).json({ status: false, message: "Internal server error" });
+    console.error("Error fetching property:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
   }
 });
 
@@ -233,7 +233,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     Property_Type,
     contact_person_mobile_number // New field added
   } = req.body;
- 
+
   // if (!property_name || !contact_person_mobile_number) {
   //   return res.status(400).json({ message: 'Property name and contact person mobile number are required', status: false });
   // }
@@ -296,7 +296,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
     }
 
     const logMessage = `Added new property: ${property_name}`;
-    
+
     await logAction(req, "acquisition", logMessage, propertyId);
     console.log(logMessage);
 
@@ -308,7 +308,7 @@ router.post('/acquisition/add', verifyToken, async (req, res) => {
 });
 
 
-  
+
 
 router.post('/acquisition/edit', verifyToken, async (req, res) => {
   const {
@@ -334,13 +334,13 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     city,
     pincode,
     Property_Type,
-    household, 
+    household,
     reach
-    
+
   } = req.body;
 
   // Check if the required fields are provided
-  if (!id || !property_name ) {
+  if (!id || !property_name) {
     return res.status(400).json({
       status: false,
       message: 'ID, Property name, Address, and screen_qty are required',
@@ -350,17 +350,17 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
   try {
     // Ensure correct data type conversion for integers  
 
-      // Fetch the previous status before updating
-      const previousStatusQuery = `SELECT status FROM acquisition WHERE id = $1`;
-      const previousStatusResult = await pool.query(previousStatusQuery, [id]);
-      if (previousStatusResult.rowCount === 0) {
-        return res.status(404).json({ status: false, message: 'No property found with the given ID' });
-      }
-      const previousStatus = previousStatusResult.rows[0].status;    
-    
+    // Fetch the previous status before updating
+    const previousStatusQuery = `SELECT status FROM acquisition WHERE id = $1`;
+    const previousStatusResult = await pool.query(previousStatusQuery, [id]);
+    if (previousStatusResult.rowCount === 0) {
+      return res.status(404).json({ status: false, message: 'No property found with the given ID' });
+    }
+    const previousStatus = previousStatusResult.rows[0].status;
+
     const parseValue = (value, type = 'int') => {
       if (!value || value === '') return null;
-      return type === 'int' ? parseInt(value, 10) : parseFloat(value);          
+      return type === 'int' ? parseInt(value, 10) : parseFloat(value);
     };
 
     const screenQtyValue = parseValue(screen_qty);
@@ -417,12 +417,12 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
     // Values to be passed into the query
     const values = [
       property_name,
-      address  || null,
+      address || null,
       screenQtyValue || null,  // Ensure this is an integer
       perScreenRentPriceValue || null, // Ensure this is a number (float)
       latitudeValue || null,
       longitudeValue || null,
-      totalTowerValue ||null, // Ensure this is an integer or null
+      totalTowerValue || null, // Ensure this is an integer or null
       totalFloorValue || null, // Ensure this is an integer or null     
       finalScreenCountValue || null, // Ensure this is an integer or null
       contact_person_name || null,
@@ -438,8 +438,8 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       city || null,
       pincode || null,
       JSON.stringify(Property_Type) || null,
-      household || null, 
-      reach || null,  
+      household || null,
+      reach || null,
       id
     ];
 
@@ -464,12 +464,12 @@ router.post('/acquisition/edit', verifyToken, async (req, res) => {
       await logAction(req, "acquisition", logMessage, id);
       console.log(logMessage);
     }
-                                                
+
 
     res.status(200).json({
       status: true,
       message: 'Data updated successfully'
-     
+
     });
   } catch (error) {
     console.error('Error updating property:', error);
@@ -623,17 +623,17 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
     }));
 
 
-       // 🔹 Fetch Latest Attendance Record
-       const attendanceQuery = `
+    // 🔹 Fetch Latest Attendance Record
+    const attendanceQuery = `
        SELECT id, emp_id, date, punch_in_time, punch_out_time
        FROM public.attendance
        WHERE emp_id = $1
        ORDER BY punch_in_time DESC 
        LIMIT 1;
      `;
-     const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
- 
-     let latestAttendance = {
+    const attendanceResult = await pool.query(attendanceQuery, [emp_id]);
+
+    let latestAttendance = {
       id: null,
       emp_id: emp_id,
       date: "null",
@@ -641,25 +641,25 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
       punch_out_time: null
     };
 
-     if (attendanceResult.rows.length > 0) {
-       const attendance = attendanceResult.rows[0];
-       latestAttendance = {
-         id: attendance.id,
-         emp_id: attendance.emp_id,
-         date: moment.utc(attendance.date)
-           .tz('Asia/Kolkata')
-           .format('YYYY-MM-DD HH:mm:ss'),
-         punch_in_time: moment.utc(attendance.punch_in_time)
-           .tz('Asia/Kolkata')
-           .format('YYYY-MM-DD HH:mm:ss'),
-         punch_out_time: attendance.punch_out_time
-           ? moment.utc(attendance.punch_out_time)
-               .tz('Asia/Kolkata')
-               .format('YYYY-MM-DD HH:mm:ss')
-           : null,
-       };
-     }
- 
+    if (attendanceResult.rows.length > 0) {
+      const attendance = attendanceResult.rows[0];
+      latestAttendance = {
+        id: attendance.id,
+        emp_id: attendance.emp_id,
+        date: moment.utc(attendance.date)
+          .tz('Asia/Kolkata')
+          .format('YYYY-MM-DD HH:mm:ss'),
+        punch_in_time: moment.utc(attendance.punch_in_time)
+          .tz('Asia/Kolkata')
+          .format('YYYY-MM-DD HH:mm:ss'),
+        punch_out_time: attendance.punch_out_time
+          ? moment.utc(attendance.punch_out_time)
+            .tz('Asia/Kolkata')
+            .format('YYYY-MM-DD HH:mm:ss')
+          : null,
+      };
+    }
+
 
     res.status(200).json({
       status: true,
@@ -676,14 +676,14 @@ router.post('/acquisition-list', verifyToken, async (req, res) => {
   }
 });
 
-  
 
 
-  
 
-          
 
-router.get('/acquisition/locations',  verifyToken, async (req, res) => {
+
+
+
+router.get('/acquisition/locations', verifyToken, async (req, res) => {
   try {
     // Hardcoded states and cities (can be fetched from a database if needed)
     const locations = {
@@ -794,7 +794,7 @@ router.post('/acquisition/create-screen', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
-  
+
 
 
 
@@ -882,7 +882,7 @@ router.post("/acquisition/add-pairingcode", verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating pairing code and status:", error);
-    res.status(500).json({status: false, message: "Internal server error." });
+    res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
 
@@ -921,13 +921,13 @@ router.post("/acquisition/EditPairingCode", verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating pairing code and status:", error);
-    res.status(500).json({status: false, message: "Internal server error." });  
+    res.status(500).json({ status: false, message: "Internal server error." });
   }
 });
 
 
-                                                                                
-  
 
-  module.exports = router;                                                      
-  
+
+
+module.exports = router;
+

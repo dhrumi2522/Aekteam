@@ -89,6 +89,7 @@ exports.postAddEmployee = async (req, res) => {
             bank_number: req.body.bank_number?.trim() || null,
             ifsc: req.body.ifsc?.trim() || null,
             last_company_name: req.body.last_company_name?.trim() || null,
+            employment_status: req.body.employment_status?.trim() || 'full-time',
             passbook_image: req.files?.passbook_image?.[0]?.path || null,
             pan_card: req.files?.pan_card?.[0]?.path || null,
             aadhar_card: req.files?.aadhar_card?.[0]?.path || null,
@@ -166,7 +167,7 @@ exports.postUpdateEmployee = async (req, res) => {
             "name", "emp_number", "email", "pin", "role", "token", "status",
             "assign_city", "isdeleted", "designation", "joining_date", "resign_date",
             "dob", "alt_phone", "ctc", "bank_number", "ifsc", "last_company_name",
-            "leave_balance", "total_accrued_leave", "leave_taken"
+            "leave_balance", "total_accrued_leave", "leave_taken", "employment_status"
         ];
 
         fields.forEach(field => {
@@ -296,6 +297,8 @@ exports.attendanceReport = async (req, res) => {
                         empMap[rec.emp_id].totalOfficialLeave++;
                     } else if (rec.status === "Taken Leave") {
                         empMap[rec.emp_id].totalTakenLeave++;
+                    } else if (rec.status.includes("Half Day Paid")) {
+                        empMap[rec.emp_id].totalAbsent += 0.5;
                     } else if (rec.status.includes("Half Day")) {
                         empMap[rec.emp_id].totalHalfDays += 0.5;
                     } else if (rec.status === "Festival Leave") {
@@ -303,18 +306,18 @@ exports.attendanceReport = async (req, res) => {
                     }
                 });
 
-                // ✅ FORMULA: Total Leave Count = Taken Leave + Absent (no-punch) + Half Days×0.5
-                // Festival and Weekend NOT counted in total
+                // ✅ FORMULA: Total Leave Count = Taken Leave + Half Days×0.5 + Festival Leave
                 summary = Object.values(empMap).map(emp => ({
                     ...emp,
-                    totalLeaveCount: emp.totalTakenLeave + emp.totalAbsent + emp.totalHalfDays
+                    totalLeaveCount: emp.totalTakenLeave + emp.totalHalfDays + emp.totalFestival
                 }));
             } else {
                 const totalPresent = attendanceData.filter((r) => r.status === "Present").length;
-                const totalAbsent = attendanceData.filter((r) => r.status === "Absent").length;
+                const totalAbsent = attendanceData.filter((r) => r.status === "Absent").length +
+                    attendanceData.filter((r) => r.status.includes("Half Day Paid")).length * 0.5;
                 const totalOfficialLeave = attendanceData.filter((r) => r.status === "Official Leave").length;
                 const totalTakenLeave = attendanceData.filter((r) => r.status === "Taken Leave").length;
-                const totalHalfDays = attendanceData.filter((r) => r.status.includes("Half Day")).length * 0.5;
+                const totalHalfDays = attendanceData.filter((r) => r.status.includes("Half Day") && !r.status.includes("Paid")).length * 0.5;
                 const totalFestival = attendanceData.filter((r) => r.status === "Festival Leave").length;
 
                 summary = {
@@ -325,10 +328,8 @@ exports.attendanceReport = async (req, res) => {
                     totalTakenLeave,
                     totalHalfDays,
                     totalFestival,
-                    // ✅ FORMULA: Taken Leave + Absent (no-punch) + Half Days×0.5
-                    // Festival and Weekend NOT counted in total
-                    // Example: 3 Taken Leave + 2 Absent + 0 Half = 5.0
-                    totalLeaveCount: totalTakenLeave + totalAbsent + totalHalfDays,
+                    // ✅ FORMULA: Taken Leave + Half Days×0.5 + Festival Leave
+                    totalLeaveCount: totalTakenLeave + totalHalfDays + totalFestival,
                 };
             }
         }
@@ -357,6 +358,38 @@ exports.attendanceReport = async (req, res) => {
             return res.status(500).json({ success: false, attendanceData: [], summary: null });
         }
         res.status(500).send("Internal Server Error");
+    }
+};
+
+// =========================
+// HR: Get Employee Attendance Details (for Modal Pop-up)
+// =========================
+exports.getEmployeeAttendanceDetails = async (req, res) => {
+    try {
+        const { emp_id, start_date, end_date } = req.query;
+
+        if (!emp_id || !start_date || !end_date) {
+            return res.status(400).json({ success: false, message: "Missing required parameters: emp_id, start_date, end_date." });
+        }
+
+        const attendanceData = await employeeModel.getAttendanceReport({ emp_id, start_date, end_date });
+
+        // Map only what is needed for the modal to minimize network payload
+        const filteredData = attendanceData.map(r => ({
+            date: r.date,
+            day: r.day,
+            punch_in_time: r.punch_in_time,
+            punch_out_time: r.punch_out_time,
+            status: r.status
+        }));
+
+        res.json({
+            success: true,
+            attendanceData: filteredData
+        });
+    } catch (error) {
+        console.error("Error fetching employee attendance details:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
@@ -427,15 +460,15 @@ exports.exportAttendanceReport = async (req, res) => {
 
             const totalDays = uniqueRecords.length;
             const totalPresent = uniqueRecords.filter((r) => r.status === "Present").length;
-            const totalAbsent = uniqueRecords.filter((r) => r.status === "Absent").length;
+            const totalAbsent = uniqueRecords.filter((r) => r.status === "Absent").length +
+                uniqueRecords.filter((r) => r.status.includes("Half Day Paid")).length * 0.5;
             const totalFestival = uniqueRecords.filter((r) => r.status === "Festival Leave").length;
             const totalOfficialLeave = uniqueRecords.filter((r) => r.status === "Official Leave").length;
             const totalTakenLeave = uniqueRecords.filter((r) => r.status === "Taken Leave").length;
-            const totalHalfDay = uniqueRecords.filter((r) => r.status.includes("Half Day")).length;
+            const totalHalfDay = uniqueRecords.filter((r) => r.status.includes("Half Day") && !r.status.includes("Paid")).length;
             const halfDayValue = totalHalfDay * 0.5;
-            // ✅ FORMULA: Total Leave = Taken Leave + Absent (no-punch) + Half Days×0.5
-            // Festival and Weekend are NOT included in total leave count
-            const totalLeaves = totalTakenLeave + totalAbsent + halfDayValue;
+            // ✅ FORMULA: Total Leave = Taken Leave + Half Days×0.5 + Festival Leave
+            const totalLeaves = totalTakenLeave + halfDayValue + totalFestival;
 
             worksheet.addRow({});
             worksheet.addRow(["Summary"]);
@@ -445,10 +478,10 @@ exports.exportAttendanceReport = async (req, res) => {
             worksheet.addRow(["Weekend Off (Official Leave)", totalOfficialLeave]);
             worksheet.addRow(["Taken Leave (Full Day)", totalTakenLeave]);
             worksheet.addRow(["Half-Day Leaves (0.5 each)", halfDayValue]);
-            worksheet.addRow(["Festival Leave (separate, not in total)", totalFestival]);
+            worksheet.addRow(["Festival Leave", totalFestival]);
             worksheet.addRow([]);
             worksheet.addRow(["Total Leave Count", totalLeaves]);
-            worksheet.addRow(["Formula", `Taken Leave(${totalTakenLeave}) + Absent(${totalAbsent}) + Half Days(${halfDayValue}) = ${totalLeaves}`]);
+            worksheet.addRow(["Formula", `Taken Leave(${totalTakenLeave}) + Half Days(${halfDayValue}) + Festival Leave(${totalFestival}) = ${totalLeaves}`]);
 
             worksheet.getRow(1).eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -466,12 +499,13 @@ exports.exportAttendanceReport = async (req, res) => {
                 { header: "Employee Name", key: "name", width: 22 },
                 { header: "Total Days", key: "total_days", width: 15 },
                 { header: "Present", key: "present", width: 15 },
-                { header: "Absent (no punch)", key: "absent", width: 18 },
-                { header: "Official Leave (Weekends)", key: "official_leave", width: 25 },
-                { header: "Taken Leave (Full Day)", key: "taken_leave", width: 22 },
-                { header: "Half-Day Leaves (0.5)", key: "half_leave", width: 20 },
-                { header: "Festival Leave", key: "festival", width: 18 },
-                { header: "Total Leave (Leave+Absent+Half)", key: "total_leave_count", width: 30 },
+                { header: "Absent (no punch + unpaid leave)", key: "absent", width: 35 },
+                { header: "Official Leave (Weekends)", key: "official_leave", width: 28 },
+                { header: "Causal/Sick Leave", key: "casual_sick_taken", width: 25 },
+                { header: "Festival Leave", key: "festival_taken", width: 18 },
+                { header: "Total leave taken(Causal/Sick + Festival)", key: "total_leave_taken", width: 45 },
+                { header: "Remaining Festival Balance", key: "remaining_festival_balance", width: 28 },
+                { header: "Remaining Causal/Sick Leave", key: "remaining_leave_balance", width: 32 },
             ];
 
             const summaryMap = {};
@@ -487,8 +521,9 @@ exports.exportAttendanceReport = async (req, res) => {
                         official_leave: 0,
                         taken_leave: 0,
                         half_leave: 0,
-                        festival: 0,
-                        total_leave_count: 0,
+                        festival_taken: 0,
+                        remaining_festival_balance: r.festival_balance !== undefined && r.festival_balance !== null ? parseFloat(r.festival_balance) : 0,
+                        remaining_leave_balance: r.leave_balance !== undefined && r.leave_balance !== null ? parseFloat(r.leave_balance) : 0,
                     };
                 }
 
@@ -499,46 +534,18 @@ exports.exportAttendanceReport = async (req, res) => {
                 else if (r.status === "Absent") emp.absent++;
                 else if (r.status === "Official Leave") emp.official_leave++;
                 else if (r.status === "Taken Leave") emp.taken_leave++;
+                else if (r.status.includes("Half Day Paid")) emp.absent += 0.5;
                 else if (r.status.includes("Half Day")) emp.half_leave += 0.5;
-                else if (r.status === "Festival Leave") emp.festival++;
+                else if (r.status === "Festival Leave") emp.festival_taken++;
+            });
 
-                // ✅ FORMULA: Total Leave = Taken Leave + Absent (no-punch) + Half Days×0.5
-                // Festival and Weekend are NOT included in total leave count
-                emp.total_leave_count = emp.taken_leave + emp.absent + emp.half_leave;
+            // Post-process the totals per employee
+            Object.values(summaryMap).forEach((emp) => {
+                emp.casual_sick_taken = emp.taken_leave + emp.half_leave;
+                emp.total_leave_taken = emp.casual_sick_taken + emp.festival_taken;
             });
 
             Object.values(summaryMap).forEach((emp) => worksheet.addRow(emp));
-
-            // ✅ Grand Total row
-            const allEmps = Object.values(summaryMap);
-            const grandTotal = allEmps.reduce((acc, e) => {
-                acc.present      += e.present;
-                acc.absent       += e.absent;
-                acc.official_leave += e.official_leave;
-                acc.taken_leave  += e.taken_leave;
-                acc.half_leave   += e.half_leave;
-                acc.festival     += e.festival;
-                acc.total_leave_count += e.total_leave_count;
-                return acc;
-            }, { present:0, absent:0, official_leave:0, taken_leave:0, half_leave:0, festival:0, total_leave_count:0 });
-
-            worksheet.addRow({});
-            const totalRow = worksheet.addRow({
-                emp_id: "GRAND TOTAL",
-                name: `${allEmps.length} employees`,
-                total_days: allEmps.reduce((s, e) => s + e.total_days, 0),
-                present: grandTotal.present,
-                absent: grandTotal.absent,
-                official_leave: grandTotal.official_leave,
-                taken_leave: grandTotal.taken_leave,
-                half_leave: grandTotal.half_leave,
-                festival: grandTotal.festival,
-                total_leave_count: grandTotal.total_leave_count,
-            });
-            totalRow.eachCell((cell) => {
-                cell.font = { bold: true };
-                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3CD" } };
-            });
 
             worksheet.getRow(1).eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -593,18 +600,29 @@ exports.addFestivalLeave = async (req, res) => {
     try {
         const { leave_date, name } = req.body;
 
-        if (!leave_date || !name)
-            return res.status(400).send("Date and Name are required");
+        if (!leave_date || !name) {
+            return res.status(400).json({ success: false, message: "Date and Name are required" });
+        }
+
+        // Check if a festival leave already exists for the selected date
+        const duplicateCheck = await pool.query(
+            "SELECT id FROM festival_leaves WHERE leave_date = $1",
+            [leave_date]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+            return res.status(400).json({ success: false, message: "Festival leave is already added on this date!" });
+        }
 
         await pool.query(
             "INSERT INTO festival_leaves (leave_date, name) VALUES ($1, $2)",
             [leave_date, name]
         );
 
-        res.redirect("/dashboard/hr/festival-leaves");
+        res.json({ success: true, message: "Festival leave added successfully!" });
     } catch (error) {
         console.error("Error adding festival leave:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
@@ -612,10 +630,10 @@ exports.deleteFestivalLeave = async (req, res) => {
     try {
         const { id } = req.params;
         await pool.query("DELETE FROM festival_leaves WHERE id = $1", [id]);
-        res.redirect("/dashboard/hr/festival-leaves");
+        res.json({ success: true, message: "Festival leave deleted successfully!" });
     } catch (error) {
         console.error("Error deleting festival leave:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 
@@ -690,8 +708,6 @@ exports.approvePermission = async (req, res) => {
             return res.status(404).json({ message: "Permission not found" });
         }
 
-        console.log("Fetched Permission Data:", permission);
-
         const attendanceDate = moment(permission.from_time).format("YYYY-MM-DD");
 
         if (!attendanceDate) {
@@ -701,17 +717,14 @@ exports.approvePermission = async (req, res) => {
 
         await employeeModel.updatePermissionStatus(permissionId, "Approved");
 
-        if (permission.type.toLowerCase() === "regularization") {
-            console.log("Updating attendance for:", permission.emp_id, "on", attendanceDate);
-
+        const allowedTypes = ["regularization", "on duty", "wfh", "short break", "late in", "early out"];
+        if (allowedTypes.includes(permission.type.toLowerCase())) {
             await employeeModel.updatePunchInOut(
                 permission.emp_id,
                 attendanceDate,
                 permission.from_time,
                 permission.to_time
             );
-        } else {
-            console.warn("⚠️ Permission type is not 'Regularization'.");
         }
 
         res.redirect("/dashboard/hr/approvePermission");
@@ -770,7 +783,7 @@ exports.getHrApplyLeavePage = async (req, res) => {
     try {
         const hr_id = req.user.emp_id;
 
-        const employeeQuery = `SELECT emp_id, name, leave_balance FROM employees WHERE emp_id = $1`;
+        const employeeQuery = `SELECT emp_id, name, leave_balance, festival_balance FROM employees WHERE emp_id = $1`;
         const employeeResult = await pool.query(employeeQuery, [hr_id]);
 
         if (employeeResult.rows.length === 0) {
@@ -869,12 +882,13 @@ exports.postHrApplyLeave = async (req, res) => {
         const employee = await employeeModel.findEmployee(emp_id);
 
         try {
+            // Send Email to HR (Commented out)
             await sendLeaveAppliedMail(employee, leave);
         } catch (emailError) {
             console.error("Failed to send email:", emailError);
         }
 
-        const employeeQuery = `SELECT emp_id, name, leave_balance FROM employees WHERE emp_id = $1`;
+        const employeeQuery = `SELECT emp_id, name, leave_balance, festival_balance FROM employees WHERE emp_id = $1`;
         const employeeResult = await pool.query(employeeQuery, [emp_id]);
 
         const pendingQuery = `SELECT * FROM leaves WHERE emp_id = $1 AND status = 'pending' ORDER BY applied_at DESC`;
@@ -913,3 +927,86 @@ exports.postHrApplyLeave = async (req, res) => {
         });
     }
 };
+
+exports.getBirthdaysPage = async (req, res) => {
+    try {
+        const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
+        const employees = await getEmployees();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentYear = today.getFullYear();
+
+        let birthdaysToday = 0;
+        let birthdaysNext30Days = 0;
+
+        const birthdayList = employees
+            .map(emp => {
+                if (!emp.dob) return null;
+
+                let dob = new Date(emp.dob);
+
+                // Handle DD-MM-YYYY string format
+                if (isNaN(dob.getTime())) {
+                    if (typeof emp.dob === 'string') {
+                        const parts = emp.dob.split("-");
+                        if (parts.length === 3) {
+                            const [day, month, year] = parts;
+                            dob = new Date(`${year}-${month}-${day}`);
+                        }
+                    }
+                }
+
+                if (isNaN(dob.getTime())) {
+                    return null;
+                }
+
+                // Calculate next occurrence of birthday
+                let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+                if (nextBirthday < today) {
+                    nextBirthday.setFullYear(currentYear + 1);
+                }
+
+                const diffTime = nextBirthday.getTime() - today.getTime();
+                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const isToday = (nextBirthday.getMonth() === today.getMonth() && nextBirthday.getDate() === today.getDate());
+
+                if (isToday) {
+                    birthdaysToday++;
+                } else if (daysUntil > 0 && daysUntil <= 30) {
+                    birthdaysNext30Days++;
+                }
+
+                const monthNames = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+                const formattedDate = `${monthNames[dob.getMonth()]} ${dob.getDate()}, ${dob.getFullYear()}`;
+
+                return {
+                    emp_id: emp.emp_id,
+                    name: emp.name ? emp.name.trim() : "",
+                    photo: emp.photo,
+                    dob: emp.dob,
+                    formatted_date: formattedDate,
+                    days_until: daysUntil,
+                    is_today: isToday
+                };
+            })
+            .filter(emp => emp !== null)
+            .sort((a, b) => a.days_until - b.days_until);
+
+        res.render('birthdays', {
+            employee,
+            birthdays: birthdayList,
+            birthdaysToday,
+            birthdaysNext30Days
+        });
+    } catch (error) {
+        console.error("Error rendering birthdays list:", error);
+        res.status(500).send("Error loading birthdays list.");
+    }
+};
+

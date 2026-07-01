@@ -231,153 +231,164 @@
 <body>
     <%- include('../partials/sidebar') %>
 
-    <div class="main-content">
-        <main>
+        <div class="main-content">
+            <main>
 
-            <h2>Regularization Requests</h2>
+                <h2>Regularization Requests</h2>
 
-            <!-- Buttons to switch between sections -->
-            <div>
-                <button onclick="showSection('applySection')">Apply</button>
-                <button onclick="showSection('pendingSection')">Pending</button>
-                <button onclick="showSection('historySection')">History</button>
-            </div>
+                <!-- Buttons to switch between sections -->
+                <div>
+                    <button onclick="showSection('applySection')">Apply</button>
+                    <button onclick="showSection('pendingSection')">Pending</button>
+                    <button onclick="showSection('historySection')">History</button>
+                </div>
 
-            <!-- Apply Section (Default View) -->
-            <section id="applySection">
-                <h3>Apply for Regularization</h3>
-
-
-                <form id="applyPermissionForm" action="/dashboard/employee/apply-permission" method="POST">
-                    <label for="type">Permission Type:</label>
-                    <select name="type" required>
-                        <option value="On Duty">On Duty</option>
-                        <option value="WFH">Work From Home</option>
-                        <option value="Short Break">Short Break</option>
-                        <option value="Late in">Late in</option>
-                        <option value="Early out">Early out</option>
-                        <option value="Regularization">Regularization</option>
-                    </select>
-
-                    <label for="from_time">From Time:</label>
-                    <input type="datetime-local" name="from_time" required>
-
-                    <label for="to_time">To Time:</label>
-                    <input type="datetime-local" name="to_time" required>
-
-                    <label for="reason">Reason:</label>
-                    <textarea name="reason" required></textarea>
-
-                    <button type="submit">Apply</button>
-                </form>
-            </section>
+                <!-- Apply Section (Default View) -->
+                <section id="applySection">
+                    <h3>Apply for Regularization</h3>
 
 
-            <!-- Pending Requests Section -->
-            <section id="pendingSection" style="display: none;">
-                <h3>Pending Requests</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>From Time</th>
-                            <th>To Time</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                            <th>Applied On</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (pendingRequests.length> 0) { %>
-                            <% pendingRequests.forEach(request=> { %>
-                                <tr>
-                                    <td>
-                                        <%= request.type %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.from_time).toLocaleString() %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.to_time).toLocaleString() %>
-                                    </td>
-                                    <td>
-                                        <%= request.reason %>
-                                    </td>
-                                    <td>
-                                        <%= request.status %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.created_at).toLocaleString() %>
-                                    </td>
-                                </tr>
-                                <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="6">No pending requests.</td>
-                                        </tr>
-                                        <% } %>
-                    </tbody>
-                </table>
-            </section>
+                    <form id="applyPermissionForm" action="/dashboard/employee/apply-permission" method="POST">
+                        <label for="type">Permission Type:</label>
+                        <select name="type" required>
+                            <option value="On Duty">On Duty</option>
+                            <option value="WFH">Work From Home</option>
+                            <option value="Short Break">Short Break</option>
+                            <option value="Late in">Late in</option>
+                            <option value="Early out">Early out</option>
+                            <option value="Regularization">Regularization</option>
+                        </select>
 
-            <!-- History Requests Section -->
-            <section id="historySection" style="display: none;">
-                <h3>History</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>From Time</th>
-                            <th>To Time</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                            <th>Approved On</th>
-                            <th>Applied On</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (historyRequests.length> 0) { %>
-                            <% historyRequests.forEach(request=> { %>
-                                <tr>
-                                    <td>
-                                        <%= request.type %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.from_time).toLocaleString() %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.to_time).toLocaleString() %>
-                                    </td>
-                                    <td>
-                                        <%= request.reason %>
-                                    </td>
-                                    <td>
-                                        <%= request.status %>
-                                    </td>
-                                    <td>
-                                        <%= request.approved_at ? new Date(request.approved_at).toLocaleString() : 'N/A'
-                                            %>
-                                    </td>
-                                    <td>
-                                        <%= new Date(request.created_at).toLocaleString() %>
-                                    </td>
-                                </tr>
-                                <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="7">No history records found.</td>
-                                        </tr>
-                                        <% } %>
-                    </tbody>
-                </table>
-            </section>
-        </main>
+                        <label for="from_time">From Time:</label>
+                        <input type="datetime-local" name="from_time" required>
+
+                        <label for="to_time">To Time:</label>
+                        <input type="datetime-local" name="to_time" required>
+
+                        <label for="reason">Reason:</label>
+                        <textarea name="reason" required></textarea>
+
+                        <button type="submit">Apply</button>
+                    </form>
+                </section>
+
+
+                <!-- Pending Requests Section -->
+                <section id="pendingSection" style="display: none;">
+                    <h3>Pending Requests</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>From Time</th>
+                                <th>To Time</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Applied On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (pendingRequests.length> 0) { %>
+                                <% pendingRequests.forEach(request=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= request.type %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.from_time).toLocaleString() %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.to_time).toLocaleString() %>
+                                        </td>
+                                        <td>
+                                            <%= request.reason %>
+                                        </td>
+                                        <td>
+                                            <%= request.status %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.created_at).toLocaleString() %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="6">No pending requests.</td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- History Requests Section -->
+                <section id="historySection" style="display: none;">
+                    <h3>History</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>From Time</th>
+                                <th>To Time</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Approved On</th>
+                                <th>Applied On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (historyRequests.length> 0) { %>
+                                <% historyRequests.forEach(request=> { %>
+                                    <tr>
+                                        <td>
+                                            <%= request.type %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.from_time).toLocaleString() %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.to_time).toLocaleString() %>
+                                        </td>
+                                        <td>
+                                            <%= request.reason %>
+                                        </td>
+                                        <td>
+                                            <%= request.status %>
+                                        </td>
+                                        <td>
+                                            <%= request.approved_at ? new Date(request.approved_at).toLocaleString()
+                                                : 'N/A' %>
+                                        </td>
+                                        <td>
+                                            <%= new Date(request.created_at).toLocaleString() %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="7">No history records found.</td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                    </table>
+                </section>
+            </main>
         </div>
 
 
         <!-- Include SweetAlert -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            // Set max date to today to disable future dates
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const maxDateTime = `${year}-${month}-${day}T23:59`;
+
+            document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
+                input.max = maxDateTime;
+            });
+
             function showSection(sectionId) {
                 document.getElementById('applySection').style.display = 'none';
                 document.getElementById('pendingSection').style.display = 'none';
@@ -399,6 +410,14 @@
                     cancelButtonText: "Cancel"
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: "Submitting...",
+                            html: "Please wait while we submit your request.",
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
                         // Submit the form after confirmation
                         this.submit();
                     }

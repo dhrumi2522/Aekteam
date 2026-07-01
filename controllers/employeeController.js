@@ -1,45 +1,45 @@
 const employeeModel = require('../models/employeeModel');
 const pool = require('../config/db');
 
-const moment = require('moment-timezone'); 
+const moment = require('moment-timezone');
 exports.getEmployeeHome = async (req, res) => {
-  try {
-    const emp_id = req.user.emp_id; // Extracted from JWT
-    const employee = await employeeModel.findEmployee(emp_id);
+    try {
+        const emp_id = req.user.emp_id; // Extracted from JWT
+        const employee = await employeeModel.findEmployee(emp_id);
 
-    if (!employee) {
-      return res.status(404).send("Employee not found");
-    }
+        if (!employee) {
+            return res.status(404).send("Employee not found");
+        }
 
-    // ✅ Fetch events (latest first)
-    const events = await pool.query(
-      `SELECT id, title, description, date 
+        // ✅ Fetch events (latest first)
+        const events = await pool.query(
+            `SELECT id, title, description, date 
        FROM public.events 
        ORDER BY date ASC`
-    );
+        );
 
-    // ✅ Get motivational quote
-    const quotes = [
-      "The great thing in this world is not so much where you stand, as in what direction you are moving. - Oliver Wendell Holmes",
-      "Success is not the key to happiness. Happiness is the key to success. - Albert Schweitzer",
-      "Believe you can and you're halfway there. - Theodore Roosevelt",
-      "Do what you can, with what you have, where you are. - Theodore Roosevelt"
-    ];
+        // ✅ Get motivational quote
+        const quotes = [
+            "The great thing in this world is not so much where you stand, as in what direction you are moving. - Oliver Wendell Holmes",
+            "Success is not the key to happiness. Happiness is the key to success. - Albert Schweitzer",
+            "Believe you can and you're halfway there. - Theodore Roosevelt",
+            "Do what you can, with what you have, where you are. - Theodore Roosevelt"
+        ];
 
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-    res.render("employee/home", {
-      employee,
-      randomQuote,
-      events: events.rows,
-    });
-  } catch (error) {
-    console.error("Error fetching employee home:", error);
-    res.status(500).send("Internal Server Error");
-  }
+        res.render("employee/home", {
+            employee,
+            randomQuote,
+            events: events.rows,
+        });
+    } catch (error) {
+        console.error("Error fetching employee home:", error);
+        res.status(500).send("Internal Server Error");
+    }
 };
 
-                                                                                 
+
 
 // exports.getProfile = async (req, res) => {
 //     try {
@@ -58,44 +58,51 @@ exports.getEmployeeHome = async (req, res) => {
 // };
 
 exports.getProfile = async (req, res) => {
-  try {
-    const emp_id = req.user.emp_id;
-    const employee = await employeeModel.findEmployee(emp_id);
+    try {
+        const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
 
-    if (!employee) {
-      return res.status(404).render("error", { message: "Employee not found" });
+        if (!employee) {
+            return res.status(404).render("error", { message: "Employee not found" });
+        }
+
+        res.render("employee/profile", { employee, editable: true });
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+        res.status(500).render("error", { message: "Internal Server Error" });
     }
-
-    res.render("employee/profile", { employee, editable: true });
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-    res.status(500).render("error", { message: "Internal Server Error" });
-  }
 };
 
 // ✅ Profile Update with Cloudinary
 exports.updateProfile = async (req, res) => {
-  try {
-    const emp_id = req.user.emp_id;
-    const data = req.body;
+    try {
+        const emp_id = req.user.emp_id;
+        const data = req.body;
 
-    // 🔹 Handle uploaded files from Cloudinary
-    if (req.files) {
-      for (const field in req.files) {
-        if (req.files[field][0] && req.files[field][0].path) {
-          data[field] = req.files[field][0].path; // store Cloudinary URL
+        // 🔹 Handle uploaded files from Cloudinary
+        if (req.files) {
+            for (const field in req.files) {
+                if (req.files[field][0] && req.files[field][0].path) {
+                    data[field] = req.files[field][0].path; // store Cloudinary URL
+                }
+            }
         }
-      }
+
+        // 🔹 Normalize empty strings to null (especially important for DATE fields)
+        for (const key in data) {
+            if (data[key] === "") {
+                data[key] = null;
+            }
+        }
+
+        // 🔹 Update employee in DB
+        await employeeModel.updateEmployee(emp_id, data);
+
+        res.redirect("/dashboard/employee/profile?success=true");
+    } catch (err) {
+        console.error("Error updating profile:", err);
+        res.redirect(`/dashboard/employee/profile?error=${encodeURIComponent(err.message)}`);
     }
-
-    // 🔹 Update employee in DB
-    await employeeModel.updateEmployee(emp_id, data);
-
-    res.redirect("/dashboard/employee/profile?success=true");
-  } catch (err) {
-    console.error("Error updating profile:", err);
-    res.redirect(`/dashboard/employee/profile?error=${encodeURIComponent(err.message)}`);
-  }
 };
 
 
@@ -143,8 +150,8 @@ exports.punchIn = async (req, res) => {
         await employeeModel.punchIn(emp_id, date, latitude, longitude, locationAddress);
 
         res.status(200).json({
-            message: locationMissing 
-                ? "Punched in successfully " 
+            message: locationMissing
+                ? "Punched in successfully "
                 : "Punched in successfully"
         });
 
@@ -154,7 +161,7 @@ exports.punchIn = async (req, res) => {
     }
 };
 
-       
+
 exports.punchOut = async (req, res) => {
     try {
         const emp_id = req.user?.emp_id;
@@ -180,7 +187,7 @@ exports.punchOut = async (req, res) => {
     }
 };
 
-                                                                                            
+
 
 exports.renderRegularizationPage = async (req, res) => {
     try {
@@ -192,8 +199,8 @@ exports.renderRegularizationPage = async (req, res) => {
         res.render('employee/Regularization', {
             employee,
             emp_id,
-            pendingRequests, 
-            historyRequests 
+            pendingRequests,
+            historyRequests
         });
     } catch (error) {
         console.error("Error rendering attendance page:", error);
@@ -209,6 +216,12 @@ exports.applyPermission = async (req, res) => {
 
         if (!emp_id) {
             return res.redirect("/dashboard/employee/apply-permission?error=Employee ID missing");
+        }
+
+        // Check for duplicate permission request
+        const duplicateExists = await employeeModel.checkDuplicatePermission(emp_id, from_time, to_time);
+        if (duplicateExists) {
+            return res.redirect("/dashboard/employee/RegularizationPage?error=" + encodeURIComponent("Already applied for this date and time"));
         }
 
         await employeeModel.applyPermission(emp_id, type, from_time, to_time, reason);
@@ -233,13 +246,13 @@ exports.getWorkingHoursSummary = async (req, res) => {
         // Default to 1st of current month to today if dates not provided
         const defaultStart = moment().startOf('month').format('YYYY-MM-DD');
         const defaultEnd = moment().format('YYYY-MM-DD');
-        
+
         const startDate = start_date || defaultStart;
         const endDate = end_date || defaultEnd;
 
         // Get attendance data for the date range
         const attendanceData = await employeeModel.getAttendanceByDateRange(emp_id, startDate, endDate);
-        
+
         // Calculate working days and hours
         let totalWorkingMinutes = 0;
         let workingDaysCount = 0;
@@ -263,10 +276,10 @@ exports.getWorkingHoursSummary = async (req, res) => {
             let punchEntries = [];
 
             const entries = attendanceByDate[date];
-            
+
             for (let i = 0; i < entries.length; i++) {
                 const entry = entries[i];
-                
+
                 if (entry.punch_in_time && entry.punch_out_time) {
                     const punchInTime = moment(entry.punch_in_time);
                     const punchOutTime = moment(entry.punch_out_time);
@@ -289,9 +302,9 @@ exports.getWorkingHoursSummary = async (req, res) => {
                 workingDaysCount++;
             }
 
-            const dayTotalHours = dayWorkingMinutes > 0 ? 
+            const dayTotalHours = dayWorkingMinutes > 0 ?
                 `${Math.floor(dayWorkingMinutes / 60)}h ${dayWorkingMinutes % 60}m` : "0h 0m";
-            
+
             totalWorkingMinutes += dayWorkingMinutes;
 
             dailyDetails.push({
@@ -307,9 +320,9 @@ exports.getWorkingHoursSummary = async (req, res) => {
         // Calculate totals
         const totalWorkingHours = Math.floor(totalWorkingMinutes / 60);
         const totalWorkingMinutesRemainder = totalWorkingMinutes % 60;
-        const averageDailyHours = workingDaysCount > 0 ? 
+        const averageDailyHours = workingDaysCount > 0 ?
             Math.floor(totalWorkingMinutes / workingDaysCount / 60) : 0;
-        const averageDailyMinutes = workingDaysCount > 0 ? 
+        const averageDailyMinutes = workingDaysCount > 0 ?
             Math.floor((totalWorkingMinutes / workingDaysCount) % 60) : 0;
 
         res.json({
@@ -357,7 +370,7 @@ exports.renderAttendancePage = async (req, res) => {
         //     return res.redirect('/login'); // Redirect if not logged in
         // }
 
-        res.render('employee/attendance', {employee, emp_id });
+        res.render('employee/attendance', { employee, emp_id });
     } catch (error) {
         console.error("Error rendering attendance page:", error);
         res.status(500).send("Server Error");

@@ -44,7 +44,7 @@
             border-radius: 12px;
             transition: all 0.3s ease-in-out;
             border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .card:hover {
@@ -116,7 +116,7 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            background: rgba(0,0,0,0.0);
+            background: rgba(0, 0, 0, 0.0);
         }
 
         .popup-content {
@@ -124,7 +124,7 @@
             background: #fff;
             border-radius: 0.5rem;
             padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
@@ -190,8 +190,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .status-badge {
@@ -224,11 +229,11 @@
                 width: 95%;
                 padding: 1rem;
             }
-            
+
             .working-hours-card h2 {
                 font-size: 1.5rem;
             }
-            
+
             .nav-tabs .nav-link {
                 padding: 8px 12px;
                 font-size: 0.9rem;
@@ -240,619 +245,660 @@
 <body>
     <!-- ✅ Sidebar Include -->
     <%- include('../partials/sidebar') %>
-    
-    <div class="main-content">
-        <div class="dashboard-container fade-in">
-            <h1 class="h3 fw-bold mb-2">Hello, <%= employee.name %>!</h1>
-            <p class="text-muted mb-4">Employee ID: <%= employee.emp_id %></p>
 
-            <!-- ✅ Motivational Quote Box -->
-            <div class="alert alert-primary d-flex align-items-center shadow-sm" role="alert">
-                <i class="bi bi-chat-quote me-2 fs-4"></i>
-                <em><%= randomQuote %></em>
-            </div>
+        <div class="main-content">
+            <div class="dashboard-container fade-in">
+                <h1 class="h3 fw-bold mb-2">Hello, <%= employee.name %>!</h1>
+                <p class="text-muted mb-4">Employee ID: <%= employee.emp_id %>
+                </p>
 
-            <!-- Tabs for Switching Views -->
-            <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-                        <i class="bi bi-house-door me-2"></i>Overview
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="working-hours-tab" data-bs-toggle="tab" data-bs-target="#working-hours" type="button" role="tab">
-                        <i class="bi bi-clock-history me-2"></i>Working Hours
-                    </button>
-                </li>
-            </ul>
-
-            <!-- Tab Content -->
-            <div class="tab-content" id="dashboardTabsContent">
-                <!-- Overview Tab -->
-                <div class="tab-pane fade show active" id="overview" role="tabpanel">
-                    <!-- ✅ Grid Section -->
-                    <div class="row g-3 mb-4">
-                        <!-- Profile Card -->
-                        <div class="col-md-6 col-xl-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-1"><%= employee.name %></h5>
-                                    <p class="text-muted mb-0">Role: <%= employee.role %></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Punch In/Out Card -->                      
-                        <div class="col-md-6 col-xl-3">                        
-                            <div class="card text-center shadow-sm h-100">  
-                                <div class="card-body">
-                                    <p id="dateDisplay" class="fw-semibold text-secondary"></p>
-                                    <p id="timeDisplay" class="text-muted mb-3 small"></p>
-                                    <button id="punchButton" class="btn btn-primary w-100">Loading...</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Info Card -->
-                        <div class="col-md-6 col-xl-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title"><i class="bi bi-telephone me-1"></i>Contact Info</h6>
-                                    <p class="mb-1">Email: <%= employee.email %></p>
-                                    <p class="mb-0">Phone: <%= employee.emp_number %></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Work Info Card -->                 
-                        <div class="col-md-6 col-xl-3">
-                            <div class="card shadow-sm h-100">      
-                                <div class="card-body">         
-                                    <h6 class="card-title"><i class="bi bi-person-badge me-1"></i>Work Details</h6>
-                                    <p class="mb-1">Designation: <%= employee.designation %></p>
-                                    <p class="mb-0">
-                                        Joining Date: <%= new Date(employee.joining_date).toDateString() %>
-                                      </p>
-                                      
-                                </div>                   
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ✅ Additional Information Section -->
-                    <div class="row g-3">
-                        <!-- Employees on Leave Today -->
-                        <div class="col-md-6" style="display: none;">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title d-flex align-items-center">
-                                        <i class="bi bi-calendar-x me-2"></i>Employees on Leave Today
-                                    </h5>
-                                    <div id="onLeaveContainer">
-                                        <p class="text-muted">Loading employees on leave...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Upcoming Birthdays -->
-                        <div class="col-md-6">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title d-flex align-items-center">
-                                        <i class="bi bi-gift me-2"></i>Upcoming Birthdays
-                                    </h5>
-                                    <div id="birthdaysContainer">
-                                        <p class="text-muted">Loading upcoming birthdays...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- ✅ Motivational Quote Box -->
+                <div class="alert alert-primary d-flex align-items-center shadow-sm" role="alert">
+                    <i class="bi bi-chat-quote me-2 fs-4"></i>
+                    <em>
+                        <%= randomQuote %>
+                    </em>
                 </div>
 
-                <!-- Working Hours Tab -->
-                <div class="tab-pane fade" id="working-hours" role="tabpanel">
-                    <!-- Date Range Selector Card -->
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title d-flex align-items-center mb-3">
-                                <i class="bi bi-calendar-range me-2 text-primary"></i>
-                                Select Date Range
-                            </h5>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-medium">From Date</label>
-                                    <input type="date" id="startDate" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-medium">To Date</label>
-                                    <input type="date" id="endDate" class="form-control">
-                                </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button id="fetchWorkingHours" class="btn btn-primary w-100">
-                                        <i class="bi bi-search me-2"></i>Get Summary
-                                    </button>
+                <!-- Tabs for Switching Views -->
+                <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                            data-bs-target="#overview" type="button" role="tab">
+                            <i class="bi bi-house-door me-2"></i>Overview
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="working-hours-tab" data-bs-toggle="tab"
+                            data-bs-target="#working-hours" type="button" role="tab">
+                            <i class="bi bi-clock-history me-2"></i>Working Hours
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="dashboardTabsContent">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        <!-- ✅ Grid Section -->
+                        <div class="row g-3 mb-4">
+                            <!-- Profile Card -->
+                            <div class="col-md-6 col-xl-3">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-1">
+                                            <%= employee.name %>
+                                        </h5>
+                                        <p class="text-muted mb-0">Role: <%= employee.role %>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                           
+
+                            <!-- Punch In/Out Card -->
+                            <div class="col-md-6 col-xl-3">
+                                <div class="card text-center shadow-sm h-100">
+                                    <div class="card-body">
+                                        <p id="dateDisplay" class="fw-semibold text-secondary"></p>
+                                        <p id="timeDisplay" class="text-muted mb-3 small"></p>
+                                        <button id="punchButton" class="btn btn-primary w-100">Loading...</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Info Card -->
+                            <div class="col-md-6 col-xl-3">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><i class="bi bi-telephone me-1"></i>Contact Info</h6>
+                                        <p class="mb-1">Email: <%= employee.email %>
+                                        </p>
+                                        <p class="mb-0">Phone: <%= employee.emp_number %>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Work Info Card -->
+                            <div class="col-md-6 col-xl-3">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><i class="bi bi-person-badge me-1"></i>Work Details</h6>
+                                        <p class="mb-1">Designation: <%= employee.designation %>
+                                        </p>
+                                        <p class="mb-0">
+                                            Joining Date: <%= new Date(employee.joining_date).toDateString() %>
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ✅ Additional Information Section -->
+                        <div class="row g-3">
+                            <!-- Employees on Leave Today -->
+                            <div class="col-md-6" style="display: none;">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title d-flex align-items-center">
+                                            <i class="bi bi-calendar-x me-2"></i>Employees on Leave Today
+                                        </h5>
+                                        <div id="onLeaveContainer">
+                                            <p class="text-muted">Loading employees on leave...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Birthdays -->
+                            <div class="col-md-6">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title d-flex align-items-center">
+                                            <i class="bi bi-gift me-2"></i>Upcoming Birthdays
+                                        </h5>
+                                        <div id="birthdaysContainer">
+                                            <p class="text-muted">Loading upcoming birthdays...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Loading Indicator -->
-                    <div id="loadingWorkingHours" class="text-center py-5 d-none">
-                        <div class="loader mx-auto"></div>
-                        <p class="mt-3 text-muted fw-medium">Loading working hours data...</p>
-                    </div>
-
-                    <!-- Summary Cards Section -->
-                    <div id="summarySection" class="row mb-4 g-3 d-none">
-                        <div class="col-md-3">
-                            <div class="card working-hours-card h-100">
-                                <div class="card-body">
-                                    <h6 class="card-subtitle mb-2 opacity-75">Working Days</h6>
-                                    <h2 id="workingDays" class="fw-bold">0</h2>
-                                    <p id="dateRange" class="small mb-0 opacity-75"></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-card-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-subtitle mb-2 text-muted">Total Hours</h6>
-                                    <h2 id="totalHours" class="fw-bold text-success">0h 0m</h2>
-                                    <p class="small text-muted mb-0">Total working time</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-card-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-subtitle mb-2 text-muted">Average Daily</h6>
-                                    <h2 id="avgDaily" class="fw-bold text-info">0h 0m</h2>
-                                    <p class="small text-muted mb-0">Per working day</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-card-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-subtitle mb-2 text-muted">Total Minutes</h6>
-                                    <h2 id="totalMinutes" class="fw-bold text-primary">0</h2>
-                                    <p class="small text-muted mb-0">In minutes</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Daily Details Table -->
-                    <div id="detailsSection" class="d-none">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">
-                                    <i class="bi bi-calendar-day me-2"></i>Daily Breakdown
+                    <!-- Working Hours Tab -->
+                    <div class="tab-pane fade" id="working-hours" role="tabpanel">
+                        <!-- Date Range Selector Card -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title d-flex align-items-center mb-3">
+                                    <i class="bi bi-calendar-range me-2 text-primary"></i>
+                                    Select Date Range
                                 </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-medium">From Date</label>
+                                        <input type="date" id="startDate" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-medium">To Date</label>
+                                        <input type="date" id="endDate" class="form-control">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button id="fetchWorkingHours" class="btn btn-primary w-100">
+                                            <i class="bi bi-search me-2"></i>Get Summary
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Day</th>
-                                                <th>Status</th>
-                                                <th>Punch Entries</th>
-                                                <th class="text-end">Total Hours</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dailyDetails">
-                                            <!-- Data will be populated here -->
-                                        </tbody>
-                                    </table>
+                        </div>
+
+                        <!-- Loading Indicator -->
+                        <div id="loadingWorkingHours" class="text-center py-5 d-none">
+                            <div class="loader mx-auto"></div>
+                            <p class="mt-3 text-muted fw-medium">Loading working hours data...</p>
+                        </div>
+
+                        <!-- Summary Cards Section -->
+                        <div id="summarySection" class="row mb-4 g-3 d-none">
+                            <div class="col-md-3">
+                                <div class="card working-hours-card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 opacity-75">Working Days</h6>
+                                        <h2 id="workingDays" class="fw-bold">0</h2>
+                                        <p id="dateRange" class="small mb-0 opacity-75"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-card-light h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Total Hours</h6>
+                                        <h2 id="totalHours" class="fw-bold text-success">0h 0m</h2>
+                                        <p class="small text-muted mb-0">Total working time</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-card-light h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Average Daily</h6>
+                                        <h2 id="avgDaily" class="fw-bold text-info">0h 0m</h2>
+                                        <p class="small text-muted mb-0">Per working day</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-card-light h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Total Minutes</h6>
+                                        <h2 id="totalMinutes" class="fw-bold text-primary">0</h2>
+                                        <p class="small text-muted mb-0">In minutes</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Empty State -->
-                    <div id="emptyState" class="text-center py-5 d-none">
-                        <i class="bi bi-calendar-x fs-1 text-muted"></i>
-                        <h4 class="mt-3 text-muted">No Attendance Data Found</h4>
-                        <p class="text-muted">Try selecting a different date range</p>
+                        <!-- Daily Details Table -->
+                        <div id="detailsSection" class="d-none">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="bi bi-calendar-day me-2"></i>Daily Breakdown
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Day</th>
+                                                    <th>Status</th>
+                                                    <th>Punch Entries</th>
+                                                    <th class="text-end">Total Hours</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dailyDetails">
+                                                <!-- Data will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState" class="text-center py-5 d-none">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <h4 class="mt-3 text-muted">No Attendance Data Found</h4>
+                            <p class="text-muted">Try selecting a different date range</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- ✅ Punch Logic & Clock -->
-    <script>
-        function formatISTTime(utcTime) {
-            const date = new Date(utcTime);
-            return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-        }
-
-        document.addEventListener("DOMContentLoaded", async () => {
-            await checkPunchStatus();
-            fetchEmployeesOnLeave();
-            fetchUpcomingBirthdays();
-            
-            // Initialize working hours
-            initializeWorkingHours();
-            
-            // Set default dates for working hours
-            const today = new Date().toISOString().split('T')[0];
-            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                .toISOString().split('T')[0];
-            
-            document.getElementById('startDate').value = firstDay;
-            document.getElementById('endDate').value = today;
-        });
-
-        async function checkPunchStatus() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-status', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                const punchButton = document.getElementById("punchButton");
-
-                if (data.punchedIn) {
-                    punchButton.textContent = "Punch Out";
-                    punchButton.onclick = confirmPunchOut;
-                } else {
-                    punchButton.textContent = "Punch In";
-                    punchButton.onclick = punchIn;
-                }
-            } catch (error) {
-                console.error("Error checking punch status:", error);
+        <!-- ✅ Punch Logic & Clock -->
+        <script>
+            function formatISTTime(utcTime) {
+                const date = new Date(utcTime);
+                return date.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
             }
-        }
 
-        function getCurrentLocation() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) {
-                    return reject("Geolocation not supported.");
-                }
+            document.addEventListener("DOMContentLoaded", async () => {
+                await checkPunchStatus();
+                fetchEmployeesOnLeave();
+                fetchUpcomingBirthdays();
 
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        resolve({
-                            latitude: pos.coords.latitude,
-                            longitude: pos.coords.longitude
-                        });
-                    },
-                    (error) => {
-                        switch (error.code) {
-                            case error.PERMISSION_DENIED:
-                                reject("Permission denied");
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                reject("Location unavailable");
-                                break;
-                            case error.TIMEOUT:
-                                reject("Location request timed out");
-                                break;
-                            default:
-                                reject("Unknown location error");
-                        }
-                    },
-                    {
-                        enableHighAccuracy: false,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
+                // Initialize working hours
+                initializeWorkingHours();
+
+                // Set default dates for working hours
+                const todayKolkata = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                const today = todayKolkata.getFullYear() + '-' +
+                    String(todayKolkata.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(todayKolkata.getDate()).padStart(2, '0');
+                const firstDay = todayKolkata.getFullYear() + '-' +
+                    String(todayKolkata.getMonth() + 1).padStart(2, '0') + '-01';
+
+                document.getElementById('startDate').value = firstDay;
+                document.getElementById('endDate').value = today;
             });
-        }
 
-        async function punchIn() {
-            try {
-                Swal.fire({
-                    title: "Getting your location...",
-                    text: "Please wait a moment.",
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                let location = null;
-
+            async function checkPunchStatus() {
                 try {
-                    location = await getCurrentLocation();
-                } catch (locError) {
-                    console.warn("Location failed:", locError);
-                    location = null;
-                }
-
-                const response = await fetch('/dashboard/employee/punch-in', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        latitude: location?.latitude || null,
-                        longitude: location?.longitude || null
-                    })
-                });
-
-                const data = await response.json();
-                Swal.close();
-
-                if (response.ok) {
-                    Swal.fire({
-                        title: "✅ Success!",
-                        text: data.message,
-                        icon: "success",
-                        timer: 1200,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.reload();
+                    const response = await fetch('/dashboard/employee/punch-status', {
+                        method: 'GET',
+                        credentials: 'include'
                     });
-                } else {
-                    Swal.fire("Error!", data.message, "error");
+                    const data = await response.json();
+                    const punchButton = document.getElementById("punchButton");
+
+                    if (data.punchedIn) {
+                        punchButton.textContent = "Punch Out";
+                        punchButton.onclick = confirmPunchOut;
+                    } else {
+                        punchButton.textContent = "Punch In";
+                        punchButton.onclick = punchIn;
+                    }
+                } catch (error) {
+                    console.error("Error checking punch status:", error);
                 }
-            } catch (err) {
-                Swal.close();
-                Swal.fire("Error", "Something went wrong.", "error");
             }
-        }
 
-        function confirmPunchOut() {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Do you want to Punch Out?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, Punch Out!",
-                cancelButtonText: "Cancel"
-            }).then(result => {
-                if (result.isConfirmed) punchOut();
-            });
-        }
+            function getCurrentLocation() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        return reject("Geolocation not supported.");
+                    }
 
-        async function punchOut() {
-            try {
-                const response = await fetch('/dashboard/employee/punch-out', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            resolve({
+                                latitude: pos.coords.latitude,
+                                longitude: pos.coords.longitude
+                            });
+                        },
+                        (error) => {
+                            switch (error.code) {
+                                case error.PERMISSION_DENIED:
+                                    reject("Permission denied");
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    reject("Location unavailable");
+                                    break;
+                                case error.TIMEOUT:
+                                    reject("Location request timed out");
+                                    break;
+                                default:
+                                    reject("Unknown location error");
+                            }
+                        },
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 5000,
+                            maximumAge: 0
+                        }
+                    );
                 });
-                const data = await response.json();
-
-                if (response.ok) {
-                    Swal.fire({
-                        title: "Success!",
-                        text: data.message,
-                        icon: "success",
-                        timer: 1200,
-                        showConfirmButton: false
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire("Error!", data.message, "error");
-                }
-            } catch (error) {
-                Swal.fire("Server Error!", "Something went wrong.", "error");
             }
-        }
 
-        function updateDateTime() {
-            const now = new Date();
-            const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
-            const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) +
-                " | 10:00 AM To 7:00 PM";
-            const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " +
-                now.getMinutes().toString().padStart(2, '0') + ":" +
-                now.getSeconds().toString().padStart(2, '0');
-
-            document.getElementById("dateDisplay").textContent = formattedDate;
-            document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
-        }
-
-        // Fetch employees on leave
-        async function fetchEmployeesOnLeave() {
-            try {
-                const response = await fetch('/dashboard/employee/leave/list?status=approved', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                if (data.success && data.leaves.length > 0) {
-                    const today = new Date().toISOString().split('T')[0];
-                    const onLeaveToday = data.leaves.filter(leave => {
-                        if (!leave.from_date || !leave.to_date) return false;
-
-                        const from = new Date(leave.from_date);
-                        const to = new Date(leave.to_date);
-                        const today = new Date();
-
-                        if (isNaN(from) || isNaN(to)) return false;
-
-                        const todayStr = today.toISOString().split('T')[0];
-                        const fromStr = from.toISOString().split('T')[0];
-                        const toStr = to.toISOString().split('T')[0];
-
-                        return fromStr <= todayStr && toStr >= todayStr;
+            async function punchIn() {
+                try {
+                    Swal.fire({
+                        title: "Getting your location...",
+                        text: "Please wait a moment.",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
                     });
-                    
-                    const container = document.getElementById('onLeaveContainer');
-                    if (onLeaveToday.length > 0) {
-                        let html = '<div>';
-                        onLeaveToday.forEach(leave => {
-                            html += `
+
+                    let location = null;
+
+                    try {
+                        location = await getCurrentLocation();
+                    } catch (locError) {
+                        console.warn("Location failed:", locError);
+                        location = null;
+                    }
+
+                    const response = await fetch('/dashboard/employee/punch-in', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            latitude: location?.latitude || null,
+                            longitude: location?.longitude || null
+                        })
+                    });
+
+                    const data = await response.json();
+                    Swal.close();
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: "✅ Success!",
+                            text: data.message,
+                            icon: "success",
+                            timer: 1200,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire("Error!", data.message, "error");
+                    }
+                } catch (err) {
+                    Swal.close();
+                    Swal.fire("Error", "Something went wrong.", "error");
+                }
+            }
+
+            function confirmPunchOut() {
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Do you want to Punch Out?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Punch Out!",
+                    cancelButtonText: "Cancel"
+                }).then(result => {
+                    if (result.isConfirmed) punchOut();
+                });
+            }
+
+            async function punchOut() {
+                try {
+                    const response = await fetch('/dashboard/employee/punch-out', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: "Success!",
+                            text: data.message,
+                            icon: "success",
+                            timer: 1200,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire("Error!", data.message, "error");
+                    }
+                } catch (error) {
+                    Swal.fire("Server Error!", "Something went wrong.", "error");
+                }
+            }
+
+            function updateDateTime() {
+                const now = new Date();
+                const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = now.toLocaleDateString('en-GB', dateOptions);
+                const formattedTime = now.toLocaleDateString('en-GB', { weekday: 'long' }) +
+                    " | 10:00 AM To 7:00 PM";
+                const formattedSeconds = now.getHours().toString().padStart(2, '0') + " : " +
+                    now.getMinutes().toString().padStart(2, '0') + ":" +
+                    now.getSeconds().toString().padStart(2, '0');
+
+                document.getElementById("dateDisplay").textContent = formattedDate;
+                document.getElementById("timeDisplay").textContent = formattedTime + " | " + formattedSeconds;
+            }
+
+            // Fetch employees on leave
+            async function fetchEmployeesOnLeave() {
+                try {
+                    const response = await fetch('/dashboard/employee/leave/list?status=approved', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+
+                    if (data.success && data.leaves.length > 0) {
+                        const todayKolkata = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                        const todayStr = todayKolkata.getFullYear() + '-' +
+                            String(todayKolkata.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(todayKolkata.getDate()).padStart(2, '0');
+
+                        const toKolkataDateStr = (dateInput) => {
+                            if (!dateInput) return '';
+                            const d = new Date(dateInput);
+                            const kolkataDate = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                            return kolkataDate.getFullYear() + '-' +
+                                String(kolkataDate.getMonth() + 1).padStart(2, '0') + '-' +
+                                String(kolkataDate.getDate()).padStart(2, '0');
+                        };
+
+                        const onLeaveToday = data.leaves.filter(leave => {
+                            if (!leave.start_date || !leave.end_date) return false;
+
+                            const fromStr = toKolkataDateStr(leave.start_date);
+                            const toStr = toKolkataDateStr(leave.end_date);
+
+                            return fromStr <= todayStr && toStr >= todayStr;
+                        });
+
+                        // Check if current employee is on full-day leave today
+                        const currentEmpId = "<%= employee.emp_id %>";
+                        const hasFullDayLeave = data.leaves.some(leave => {
+                            if (leave.emp_id !== currentEmpId) return false;
+                            if (leave.half_day && leave.half_day !== '' && leave.half_day !== 'false' && leave.half_day !== false) return false;
+                            if (!leave.start_date || !leave.end_date) return false;
+
+                            const fromStr = toKolkataDateStr(leave.start_date);
+                            const toStr = toKolkataDateStr(leave.end_date);
+
+                            return fromStr <= todayStr && toStr >= todayStr;
+                        });
+
+                        if (hasFullDayLeave) {
+                            const punchButton = document.getElementById("punchButton");
+                            punchButton.textContent = "You are on leave";
+                            punchButton.disabled = true;
+                            punchButton.className = "btn btn-secondary w-100";
+                            punchButton.onclick = null;
+                        }
+
+                        const container = document.getElementById('onLeaveContainer');
+                        if (onLeaveToday.length > 0) {
+                            let html = '<div>';
+                            onLeaveToday.forEach(leave => {
+                                html += `
                                 <span class="leave-badge">
                                     <i class="bi bi-person-x badge-icon"></i>
                                     ${leave.employee_name} (${leave.leave_type})
                                 </span>
                             `;
-                        });
-                        html += '</div>';
-                        container.innerHTML = html;
+                            });
+                            html += '</div>';
+                            container.innerHTML = html;
+                        } else {
+                            container.innerHTML = '<p class="text-muted">No employees on leave today</p>';
+                        }
                     } else {
-                        container.innerHTML = '<p class="text-muted">No employees on leave today</p>';
+                        document.getElementById('onLeaveContainer').innerHTML =
+                            '<p class="text-muted">No employees on leave today</p>';
                     }
-                } else {
-                    document.getElementById('onLeaveContainer').innerHTML = 
-                        '<p class="text-muted">No employees on leave today</p>';
+                } catch (error) {
+                    console.error("Error fetching employees on leave:", error);
+                    document.getElementById('onLeaveContainer').innerHTML =
+                        '<p class="text-danger">Error loading leave data</p>';
                 }
-            } catch (error) {
-                console.error("Error fetching employees on leave:", error);
-                document.getElementById('onLeaveContainer').innerHTML = 
-                    '<p class="text-danger">Error loading leave data</p>';
             }
-        }
 
-        // Fetch upcoming birthdays
-        async function fetchUpcomingBirthdays() {
-            try {
-                const response = await fetch('/dashboard/employee/birthdays', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const container = document.getElementById('birthdaysContainer');
-                    
-                    if (data.success && data.birthdays.length > 0) {
-                        let html = '<div class="d-flex flex-wrap gap-2">';
-                        
-                        data.birthdays.forEach(emp => {
-                            let badgeClass = "birthday-badge";
-                            if (emp.days_until === 0) {
-                                badgeClass = "birthday-badge-today";
-                            } else if (emp.days_until <= 7) {
-                                badgeClass = "birthday-badge-soon";
-                            }
-                            
-                            html += `
+            // Fetch upcoming birthdays
+            async function fetchUpcomingBirthdays() {
+                try {
+                    const response = await fetch('/dashboard/employee/birthdays', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const container = document.getElementById('birthdaysContainer');
+
+                        if (data.success && data.birthdays.length > 0) {
+                            let html = '<div class="d-flex flex-wrap gap-2">';
+
+                            data.birthdays.forEach(emp => {
+                                let badgeClass = "birthday-badge";
+                                if (emp.days_until === 0) {
+                                    badgeClass = "birthday-badge-today";
+                                } else if (emp.days_until <= 7) {
+                                    badgeClass = "birthday-badge-soon";
+                                }
+
+                                html += `
                                 <span class="${badgeClass}">
                                     <i class="bi bi-balloon-fill badge-icon"></i>
                                     ${emp.name} - ${emp.formatted_date}
-                                    ${emp.days_until === 0 ? ' (Today!)' : 
-                                    emp.days_until <= 7 ? ` (in ${emp.days_until} days)` : ''}
+                                    ${emp.days_until === 0 ? ' (Today!)' :
+                                        emp.days_until <= 7 ? ` (in ${emp.days_until} days)` : ''}
                                 </span>
                             `;
-                        });
-                        
-                        html += '</div>';
-                        container.innerHTML = html;
-                    } else {
-                        container.innerHTML = `
+                            });
+
+                            html += '</div>';
+                            container.innerHTML = html;
+                        } else {
+                            container.innerHTML = `
                             <div class="text-center py-3">
                                 <i class="bi bi-calendar-x fs-1 text-muted"></i>
                                 <p class="text-muted mt-2">No IT Team birthdays in the next 30 days</p>
                             </div>
                         `;
+                        }
+                    } else {
+                        throw new Error('Failed to fetch birthdays');
                     }
-                } else {
-                    throw new Error('Failed to fetch birthdays');
-                }
-            } catch (error) {
-                console.error("Error fetching upcoming birthdays:", error);
-                document.getElementById('birthdaysContainer').innerHTML = `
+                } catch (error) {
+                    console.error("Error fetching upcoming birthdays:", error);
+                    document.getElementById('birthdaysContainer').innerHTML = `
                     <div class="alert alert-danger">
                         <i class="bi bi-exclamation-triangle-fill"></i> 
                         Error loading birthday data
                     </div>
                 `;
-            }
-        }
-
-        // Working Hours Functions
-        function initializeWorkingHours() {
-            document.getElementById('fetchWorkingHours').addEventListener('click', fetchWorkingHours);
-        }
-
-        async function fetchWorkingHours() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            
-            // Validation
-            if (!startDate || !endDate) {
-                Swal.fire('Error', 'Please select both dates', 'error');
-                return;
-            }
-            
-            if (new Date(startDate) > new Date(endDate)) {
-                Swal.fire('Error', 'Start date must be before end date', 'error');
-                return;
-            }
-            
-            // Show loading
-            document.getElementById('loadingWorkingHours').classList.remove('d-none');
-            document.getElementById('summarySection').classList.add('d-none');
-            document.getElementById('detailsSection').classList.add('d-none');
-            document.getElementById('emptyState').classList.add('d-none');
-            
-            try {
-                const response = await fetch(`/dashboard/employee/api/working-hours-summary?start_date=${startDate}&end_date=${endDate}`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                // Hide loading
-                document.getElementById('loadingWorkingHours').classList.add('d-none');
-                
-                if (data.success && data.summary.working_days_count > 0) {
-                    updateSummary(data.summary);
-                    updateDailyDetails(data.daily_details);
-                    
-                    document.getElementById('summarySection').classList.remove('d-none');
-                    document.getElementById('detailsSection').classList.remove('d-none');
-                    document.getElementById('emptyState').classList.add('d-none');
-                } else {
-                    document.getElementById('summarySection').classList.add('d-none');
-                    document.getElementById('detailsSection').classList.add('d-none');
-                    document.getElementById('emptyState').classList.remove('d-none');
                 }
-                
-            } catch (error) {
-                console.error('Error fetching working hours:', error);
-                document.getElementById('loadingWorkingHours').classList.add('d-none');
-                Swal.fire('Error', 'Error fetching data. Please try again.', 'error');
             }
-        }
-        
-        function updateSummary(summary) {
-            document.getElementById('workingDays').textContent = summary.working_days_count;
-            document.getElementById('totalHours').textContent = summary.total_working_hours;
-            document.getElementById('avgDaily').textContent = summary.average_daily_hours;
-            document.getElementById('totalMinutes').textContent = summary.total_working_minutes;
-            
-            document.getElementById('dateRange').textContent = 
-                `${summary.start_date} to ${summary.end_date}`;
-        }
-        
-        function updateDailyDetails(details) {
-            const tbody = document.getElementById('dailyDetails');
-            tbody.innerHTML = '';
-            
-            details.forEach(day => {
-                const row = document.createElement('tr');
-                
-                // Determine row class
-                let rowClass = '';
-                if (day.is_weekend) {
-                    rowClass = 'weekend-row';
-                } else if (day.working_day) {
-                    rowClass = 'working-day-row';
-                } else {
-                    rowClass = 'non-working-row';
+
+            // Working Hours Functions
+            function initializeWorkingHours() {
+                document.getElementById('fetchWorkingHours').addEventListener('click', fetchWorkingHours);
+            }
+
+            async function fetchWorkingHours() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                // Validation
+                if (!startDate || !endDate) {
+                    Swal.fire('Error', 'Please select both dates', 'error');
+                    return;
                 }
-                
-                // Format punch entries
-                let punchHtml = '';
-                if (day.punch_entries && day.punch_entries.length > 0) {
-                    day.punch_entries.forEach(entry => {
-                        punchHtml += `
+
+                if (new Date(startDate) > new Date(endDate)) {
+                    Swal.fire('Error', 'Start date must be before end date', 'error');
+                    return;
+                }
+
+                // Show loading
+                document.getElementById('loadingWorkingHours').classList.remove('d-none');
+                document.getElementById('summarySection').classList.add('d-none');
+                document.getElementById('detailsSection').classList.add('d-none');
+                document.getElementById('emptyState').classList.add('d-none');
+
+                try {
+                    const response = await fetch(`/dashboard/employee/api/working-hours-summary?start_date=${startDate}&end_date=${endDate}`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    const data = await response.json();
+
+                    // Hide loading
+                    document.getElementById('loadingWorkingHours').classList.add('d-none');
+
+                    if (data.success && data.summary.working_days_count > 0) {
+                        updateSummary(data.summary);
+                        updateDailyDetails(data.daily_details);
+
+                        document.getElementById('summarySection').classList.remove('d-none');
+                        document.getElementById('detailsSection').classList.remove('d-none');
+                        document.getElementById('emptyState').classList.add('d-none');
+                    } else {
+                        document.getElementById('summarySection').classList.add('d-none');
+                        document.getElementById('detailsSection').classList.add('d-none');
+                        document.getElementById('emptyState').classList.remove('d-none');
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching working hours:', error);
+                    document.getElementById('loadingWorkingHours').classList.add('d-none');
+                    Swal.fire('Error', 'Error fetching data. Please try again.', 'error');
+                }
+            }
+
+            function updateSummary(summary) {
+                document.getElementById('workingDays').textContent = summary.working_days_count;
+                document.getElementById('totalHours').textContent = summary.total_working_hours;
+                document.getElementById('avgDaily').textContent = summary.average_daily_hours;
+                document.getElementById('totalMinutes').textContent = summary.total_working_minutes;
+
+                document.getElementById('dateRange').textContent =
+                    `${summary.start_date} to ${summary.end_date}`;
+            }
+
+            function updateDailyDetails(details) {
+                const tbody = document.getElementById('dailyDetails');
+                tbody.innerHTML = '';
+
+                details.forEach(day => {
+                    const row = document.createElement('tr');
+
+                    // Determine row class
+                    let rowClass = '';
+                    if (day.is_weekend) {
+                        rowClass = 'weekend-row';
+                    } else if (day.working_day) {
+                        rowClass = 'working-day-row';
+                    } else {
+                        rowClass = 'non-working-row';
+                    }
+
+                    // Format punch entries
+                    let punchHtml = '';
+                    if (day.punch_entries && day.punch_entries.length > 0) {
+                        day.punch_entries.forEach(entry => {
+                            punchHtml += `
                             <div class="punch-entry-item">
                                 <span class="text-primary">${entry.punch_in}</span>
                                 <i class="bi bi-arrow-right mx-2 text-muted"></i>
@@ -860,37 +906,38 @@
                                 <span class="badge bg-light text-dark ms-2">${entry.session_hours}</span>
                             </div>
                         `;
-                    });
-                } else {
-                    punchHtml = '<span class="text-muted">No punches</span>';
-                }
-                
-                // Determine status badge
-                let statusBadge = '';
-                if (day.is_weekend) {
-                    statusBadge = '<span class="badge bg-warning status-badge">Weekend</span>';
-                } else if (day.working_day) {
-                    statusBadge = '<span class="badge bg-success status-badge">Working Day</span>';
-                } else {
-                    statusBadge = '<span class="badge bg-secondary status-badge">Non-Working</span>';
-                }
-                
-                row.innerHTML = `
+                        });
+                    } else {
+                        punchHtml = '<span class="text-muted">No punches</span>';
+                    }
+
+                    // Determine status badge
+                    let statusBadge = '';
+                    if (day.is_weekend) {
+                        statusBadge = '<span class="badge bg-warning status-badge">Weekend</span>';
+                    } else if (day.working_day) {
+                        statusBadge = '<span class="badge bg-success status-badge">Working Day</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-secondary status-badge">Non-Working</span>';
+                    }
+
+                    row.innerHTML = `
                     <td><strong>${day.date}</strong></td>
                     <td>${day.day_of_week}</td>
                     <td>${statusBadge}</td>
                     <td>${punchHtml}</td>
                     <td class="text-end fw-bold">${day.total_hours}</td>
                 `;
-                
-                row.className = rowClass;
-                tbody.appendChild(row);
-            });
-        }
 
-        // Start clock
-        setInterval(updateDateTime, 1000);
-        updateDateTime();
-    </script>
+                    row.className = rowClass;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Start clock
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+        </script>
 </body>
-</html>                  
+
+</html>

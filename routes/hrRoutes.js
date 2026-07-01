@@ -57,6 +57,7 @@ router.post('/reject', verifyToken, requireHR, (req, res) => {
 
 router.get("/attendanceReport", verifyToken, requireHR, hrController.attendanceReport);
 router.get("/exportAttendance", verifyToken, requireHR, hrController.exportAttendanceReport);
+router.get("/employeeAttendanceDetails", verifyToken, requireHR, hrController.getEmployeeAttendanceDetails);
 
 // Page to view and approve permissions
 router.get("/approvePermission", verifyToken, requireHR, hrController.getPendingPermissions);
@@ -139,5 +140,8 @@ router.get('/apply-leave', verifyToken, requireHR, hrController.getHrApplyLeaveP
 
 // HR Submit Leave Application
 router.post('/apply-leave', verifyToken, requireHR, hrController.postHrApplyLeave);
+
+// HR Birthdays List Route
+router.get('/birthdays-list', verifyToken, requireHR, hrController.getBirthdaysPage);
 
 module.exports = router;
