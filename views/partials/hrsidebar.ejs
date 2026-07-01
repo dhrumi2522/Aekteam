@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <div class="sidebar" id="sidebar">
     <!-- Company Logo -->
     <div class="logo">
@@ -7,52 +7,57 @@
     </div>
 
     <div class="profile">
-        
-            <img src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>" alt="Profile Picture">
-    
-        <h3 class="EName"><%= employee.name %></h3>
-        <p>ID: <%= employee.emp_id %></p>
+
+        <img src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
+            alt="Profile Picture">
+
+        <h3 class="EName">
+            <%= employee.name %>
+        </h3>
+        <p>ID: <%= employee.emp_id %>
+        </p>
     </div>
-    
-    
+
+
     <ul class="nav-links">
         <li><a href="/dashboard/hr/">🏠 Home</a></li>
         <li><a href="/dashboard/hr/employees/list">📅 employees</a></li>
+        <li><a href="/dashboard/hr/birthdays-list">🎂 Birthdays</a></li>
         <!-- In your sidebar navigation of other HR pages -->
-<li class="nav-item">
-    <a  href="/dashboard/hr/apply-leave">
-        <i class="bi bi-calendar-plus me-2"></i> Apply Leave
-    </a>
-</li>
+        <li class="nav-item">
+            <a href="/dashboard/hr/apply-leave">
+                <i class="bi bi-calendar-plus me-2"></i> Apply Leave
+            </a>
+        </li>
         <li><a href="/dashboard/hr/approval">💰 leave</a></li>
 
 
 
-        <% if (["emp_43", "emp_32", "emp_33", "emp_47"].includes(employee.emp_id)) { %>
-      
-        <li><a href="/dashboard/hr/summary-reportHR"><i class="fas fa-chart-line"></i> Report</a></li>
-      <% } %>
-       
+        <% if (["emp_43", "emp_32" , "emp_33" , "emp_47" ].includes(employee.emp_id)) { %>
 
-        <ul class="sidebar-menu">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle">👤 Attendance <span class="arrow">▶</span></a>
-                <ul class="submenu">
-                    <li><a href="/dashboard/hr/attendanceReport">📋 Attendance Report</a></li>
-                    <li><a href="/dashboard/hr/approvePermission">Regularization & Permission</a></li>
-                    <li><a href="/dashboard/hr/leaveHistory">🗓 Leave History</a></li>
-                   <li><a href="/dashboard/hr/festival-leaves">🗓festival-leaves</a></li>
+            <li><a href="/dashboard/hr/summary-reportHR"><i class="fas fa-chart-line"></i> Report</a></li>
+            <% } %>
 
 
-                    
+                <ul class="sidebar-menu">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">👤 Attendance <span class="arrow">▶</span></a>
+                        <ul class="submenu">
+                            <li><a href="/dashboard/hr/attendanceReport">📋 Attendance Report</a></li>
+                            <li><a href="/dashboard/hr/approvePermission">Regularization & Permission</a></li>
+                            <li><a href="/dashboard/hr/leaveHistory">🗓 Leave History</a></li>
+                            <li><a href="/dashboard/hr/festival-leaves">🗓festival-leaves</a></li>
+
+
+
+                        </ul>
+                    </li>
                 </ul>
-            </li>
-        </ul>
-        <li>
-            <a href="#" class="logout" onclick="logoutUser();">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </li>
+                <li>
+                    <a href="#" class="logout" onclick="logoutUser();">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
     </ul>
 </div>
 
@@ -68,19 +73,19 @@
 
 <script>
     function logoutUser() {
-         fetch('/logout', {
-             method: 'POST',
-             credentials: 'same-origin' // Ensures cookies are sent with the request
-         }).then(() => {
-             window.location.href = '/login'; // Redirect after logout
-         }).catch(err => console.error('Logout failed:', err));
-     }
- 
- </script>
+        fetch('/logout', {
+            method: 'POST',
+            credentials: 'same-origin' // Ensures cookies are sent with the request
+        }).then(() => {
+            window.location.href = '/login'; // Redirect after logout
+        }).catch(err => console.error('Logout failed:', err));
+    }
+
+</script>
 
 <style>
-/* Sidebar Styles */
-.sidebar {
+    /* Sidebar Styles */
+    .sidebar {
         position: fixed;
         left: 0;
         top: 0;
@@ -123,34 +128,35 @@
         font-weight: 600;
     }
 
-.default-avatar {
-    width: 85px;
-    height: 85px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: bold;
-    background: #34495e;
-    color: white;
-    border: 3px solid white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    text-transform: uppercase;
-}
+    .default-avatar {
+        width: 85px;
+        height: 85px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        background: #34495e;
+        color: white;
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        text-transform: uppercase;
+    }
 
-.EName {
-    font-size: 18px;
-    font-weight: bold;
-    margin-top: 10px;
-    color: #0f0f0f;
-}
+    .EName {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 10px;
+        color: #0f0f0f;
+    }
 
-.profile p {
-    font-size: 14px;
-    color: #bdc3c7;
-}
-.nav-links {
+    .profile p {
+        font-size: 14px;
+        color: #bdc3c7;
+    }
+
+    .nav-links {
         list-style: none;
         padding: 0;
         margin: 20px 0 0 0;
@@ -185,71 +191,73 @@
     .nav-links li i {
         font-size: 18px;
     }
-/* Dropdown Menu */
-.sidebar-menu {
-    list-style: none;
-    padding: 0;
-}
 
-.dropdown {
-    position: relative;
-}
+    /* Dropdown Menu */
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+    }
 
-.dropdown-toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    border-radius: 5px;
-    font-size: 16px;
-    color: white;
-    text-decoration: none;
-    transition: background 0.3s ease-in-out;
-}
+    .dropdown {
+        position: relative;
+    }
 
-.dropdown-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
+    .dropdown-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 5px;
+        font-size: 16px;
+        color: white;
+        text-decoration: none;
+        transition: background 0.3s ease-in-out;
+    }
 
-.arrow {
-    transition: transform 0.3s ease-in-out;
-}
+    .dropdown-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
 
-.dropdown.open .arrow {
-    transform: rotate(90deg);
-}
+    .arrow {
+        transition: transform 0.3s ease-in-out;
+    }
 
-.submenu {
-    list-style: none;
-    padding-left: 20px;
-    display: none;
-}
+    .dropdown.open .arrow {
+        transform: rotate(90deg);
+    }
 
-.dropdown.open .submenu {
-    display: block;
-}
+    .submenu {
+        list-style: none;
+        padding-left: 20px;
+        display: none;
+    }
 
-/* Hamburger Menu */
-.hamburger {
-    display: none;
-    font-size: 28px;
-    cursor: pointer;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    background: #2c3e50;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    transition: all 0.3s ease-in-out;
-    z-index: 1000;
-}
+    .dropdown.open .submenu {
+        display: block;
+    }
 
-.hamburger:hover {
-    background: #1a252f;
-}
-  /* Mobile styles: Sidebar starts hidden */
-  @media screen and (max-width: 1024px) {
+    /* Hamburger Menu */
+    .hamburger {
+        display: none;
+        font-size: 28px;
+        cursor: pointer;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        background: #2c3e50;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        transition: all 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    .hamburger:hover {
+        background: #1a252f;
+    }
+
+    /* Mobile styles: Sidebar starts hidden */
+    @media screen and (max-width: 1024px) {
         .sidebar {
             transform: translateX(-100%);
         }
@@ -259,31 +267,29 @@
         }
 
         .hamburger {
-            display: block; /* Show hamburger button */
+            display: block;
+            /* Show hamburger button */
         }
     }
-
-
-
 </style>
 
 <script>
-       function toggleSidebar() {
+    function toggleSidebar() {
         document.querySelector('.sidebar').classList.toggle('active');
     }
 
 
 
     document.addEventListener("DOMContentLoaded", function () {
-    const dropdownToggle = document.querySelector(".dropdown-toggle");
-    const submenu = document.querySelector(".submenu");
-    const arrow = document.querySelector(".arrow");
+        const dropdownToggle = document.querySelector(".dropdown-toggle");
+        const submenu = document.querySelector(".submenu");
+        const arrow = document.querySelector(".arrow");
 
-    dropdownToggle.addEventListener("click", function (e) {
-        e.preventDefault();
-        submenu.style.display = submenu.style.display === "block" ? "none" : "block";
-        arrow.classList.toggle("rotate");
+        dropdownToggle.addEventListener("click", function (e) {
+            e.preventDefault();
+            submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+            arrow.classList.toggle("rotate");
+        });
     });
-});
 
 </script>

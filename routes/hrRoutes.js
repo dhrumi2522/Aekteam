@@ -141,4 +141,7 @@ router.get('/apply-leave', verifyToken, requireHR, hrController.getHrApplyLeaveP
 // HR Submit Leave Application
 router.post('/apply-leave', verifyToken, requireHR, hrController.postHrApplyLeave);
 
+// HR Birthdays List Route
+router.get('/birthdays-list', verifyToken, requireHR, hrController.getBirthdaysPage);
+
 module.exports = router;

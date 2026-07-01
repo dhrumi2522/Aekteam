@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Chart.js -->
@@ -602,6 +604,25 @@
       .status-leave {
         background-color: #FF9800;
       }
+
+      /* Birthday badges styling */
+      .birthday-badge, .birthday-badge-today, .birthday-badge-soon {
+        background-color: #fff8e1;
+        color: #ff8f00;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 550;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(255, 143, 0, 0.15);
+      }
+
+      .badge-icon {
+        margin-right: 5px;
+      }
     </style>
   </head>
 
@@ -673,12 +694,33 @@
         </div>
       </div>
 
-      <!-- Punch Card -->
-      <div class="punch-card">
-        <div id="dateDisplay" class="date-display"></div>
-        <div id="timeDisplay" class="time-display"></div>
-        <p class="mb-3 text-muted">Working Hours: 10:00 AM To 7:00 PM</p>
-        <button id="punchButton" class="btn btn-primary">Loading...</button>
+      <!-- Punch Card & Upcoming Birthdays Row -->
+      <div class="row">
+        <!-- Punch Card (Wide) -->
+        <div class="col-lg-8 col-md-7 mb-4">
+          <div class="punch-card h-100" style="margin-bottom: 0;">
+            <div id="dateDisplay" class="date-display"></div>
+            <div id="timeDisplay" class="time-display"></div>
+            <p class="mb-3 text-muted">Working Hours: 10:00 AM To 7:00 PM</p>
+            <button id="punchButton" class="btn btn-primary">Loading...</button>
+          </div>
+        </div>
+
+        <!-- Birthday Card (Small) -->
+        <div class="col-lg-4 col-md-5 mb-4">
+          <div class="card shadow-sm h-100"
+            style="border-radius: var(--border-radius); border: none; box-shadow: var(--box-shadow); background: var(--white); padding: 25px;">
+            <div class="card-body p-0">
+              <h5 class="card-title d-flex align-items-center mb-3"
+                style="font-weight: 600; font-size: 1.1rem; color: var(--dark);">
+                <i class="bi bi-gift me-2 text-primary" style="margin-right: 8px;"></i> Upcoming Birthdays
+              </h5>
+              <div id="birthdaysContainer" class="d-flex flex-wrap gap-2 pt-2">
+                <p class="text-muted">Loading upcoming birthdays...</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
 
@@ -689,7 +731,10 @@
           updateDateTime();
           setInterval(updateDateTime, 1000);
           checkPunchStatus();
-          initializeCharts();
+          if (typeof initializeCharts === 'function') {
+            initializeCharts();
+          }
+          fetchUpcomingBirthdays();
         });
 
         // Date & Time Display
@@ -942,6 +987,62 @@
           }).then(result => {
             if (result.isConfirmed) punchOut();
           });
+        }
+
+        async function fetchUpcomingBirthdays() {
+            try {
+                const response = await fetch('/dashboard/employee/birthdays', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const container = document.getElementById('birthdaysContainer');
+
+                    if (data.success && data.birthdays.length > 0) {
+                        let html = '<div class="d-flex flex-wrap gap-2">';
+
+                        data.birthdays.forEach(emp => {
+                            let badgeClass = "birthday-badge";
+                            if (emp.days_until === 0) {
+                                badgeClass = "birthday-badge-today";
+                            } else if (emp.days_until <= 7) {
+                                badgeClass = "birthday-badge-soon";
+                            }
+
+                            html += `
+                            <span class="${badgeClass}">
+                                <i class="bi bi-balloon-fill badge-icon"></i>
+                                ${emp.name} - ${emp.formatted_date}
+                                ${emp.days_until === 0 ? ' (Today!)' :
+                                    emp.days_until <= 7 ? ` (in ${emp.days_until} days)` : ''}
+                            </span>
+                        `;
+                        });
+
+                        html += '</div>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                        <div class="text-center py-3 w-100">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">No birthdays in the next 30 days</p>
+                        </div>
+                    `;
+                    }
+                } else {
+                    throw new Error('Failed to fetch birthdays');
+                }
+            } catch (error) {
+                console.error("Error fetching upcoming birthdays:", error);
+                document.getElementById('birthdaysContainer').innerHTML = `
+                <div class="alert alert-danger w-100">
+                    <i class="bi bi-exclamation-triangle-fill"></i> 
+                    Error loading birthday data
+                </div>
+            `;
+            }
         }
 
         async function punchOut() {

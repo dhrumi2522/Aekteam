@@ -883,7 +883,7 @@ exports.postHrApplyLeave = async (req, res) => {
 
         try {
             // Send Email to HR (Commented out)
-            // await sendLeaveAppliedMail(employee, leave);
+            await sendLeaveAppliedMail(employee, leave);
         } catch (emailError) {
             console.error("Failed to send email:", emailError);
         }
@@ -927,3 +927,86 @@ exports.postHrApplyLeave = async (req, res) => {
         });
     }
 };
+
+exports.getBirthdaysPage = async (req, res) => {
+    try {
+        const emp_id = req.user.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
+        const employees = await getEmployees();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const currentYear = today.getFullYear();
+
+        let birthdaysToday = 0;
+        let birthdaysNext30Days = 0;
+
+        const birthdayList = employees
+            .map(emp => {
+                if (!emp.dob) return null;
+
+                let dob = new Date(emp.dob);
+
+                // Handle DD-MM-YYYY string format
+                if (isNaN(dob.getTime())) {
+                    if (typeof emp.dob === 'string') {
+                        const parts = emp.dob.split("-");
+                        if (parts.length === 3) {
+                            const [day, month, year] = parts;
+                            dob = new Date(`${year}-${month}-${day}`);
+                        }
+                    }
+                }
+
+                if (isNaN(dob.getTime())) {
+                    return null;
+                }
+
+                // Calculate next occurrence of birthday
+                let nextBirthday = new Date(currentYear, dob.getMonth(), dob.getDate());
+                if (nextBirthday < today) {
+                    nextBirthday.setFullYear(currentYear + 1);
+                }
+
+                const diffTime = nextBirthday.getTime() - today.getTime();
+                const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                const isToday = (nextBirthday.getMonth() === today.getMonth() && nextBirthday.getDate() === today.getDate());
+
+                if (isToday) {
+                    birthdaysToday++;
+                } else if (daysUntil > 0 && daysUntil <= 30) {
+                    birthdaysNext30Days++;
+                }
+
+                const monthNames = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+                const formattedDate = `${monthNames[dob.getMonth()]} ${dob.getDate()}, ${dob.getFullYear()}`;
+
+                return {
+                    emp_id: emp.emp_id,
+                    name: emp.name ? emp.name.trim() : "",
+                    photo: emp.photo,
+                    dob: emp.dob,
+                    formatted_date: formattedDate,
+                    days_until: daysUntil,
+                    is_today: isToday
+                };
+            })
+            .filter(emp => emp !== null)
+            .sort((a, b) => a.days_until - b.days_until);
+
+        res.render('birthdays', {
+            employee,
+            birthdays: birthdayList,
+            birthdaysToday,
+            birthdaysNext30Days
+        });
+    } catch (error) {
+        console.error("Error rendering birthdays list:", error);
+        res.status(500).send("Error loading birthdays list.");
+    }
+};
+

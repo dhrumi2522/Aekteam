@@ -88,6 +88,13 @@ exports.updateProfile = async (req, res) => {
             }
         }
 
+        // 🔹 Normalize empty strings to null (especially important for DATE fields)
+        for (const key in data) {
+            if (data[key] === "") {
+                data[key] = null;
+            }
+        }
+
         // 🔹 Update employee in DB
         await employeeModel.updateEmployee(emp_id, data);
 

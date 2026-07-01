@@ -1,0 +1,368 @@
+<%- include('./partials/hrsidebar') %>
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthdays List</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+      /* 🌍 Global Layout & Theme Setup */
+      :root {
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --pink-accent: #e83e8c;
+        --orange-accent: #fd7e14;
+        --dark: #212529;
+        --gray: #6c757d;
+        --light-gray: #f8f9fa;
+        --border-radius: 16px;
+        --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s ease;
+        --sidebar-width: 270px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f5f7fb;
+        color: var(--dark);
+        min-height: 100vh;
+        padding: 30px;
+        margin-left: var(--sidebar-width);
+        transition: margin-left 0.3s ease;
+      }
+
+      /* Content Area Container */
+      .content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Summary Cards Row */
+      .summary-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        margin-bottom: 35px;
+      }
+
+      .summary-card {
+        background: #ffffff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        transition: var(--transition);
+      }
+
+      .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      .summary-card.today {
+        border-left: 5px solid var(--pink-accent);
+      }
+
+      .summary-card.upcoming {
+        border-left: 5px solid var(--orange-accent);
+      }
+
+      .card-info {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--gray);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 5px;
+      }
+
+      .card-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--dark);
+      }
+
+      .card-icon-container {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        transition: var(--transition);
+      }
+
+      .today .card-icon-container {
+        background-color: rgba(232, 62, 140, 0.1);
+        color: var(--pink-accent);
+      }
+
+      .upcoming .card-icon-container {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: var(--orange-accent);
+      }
+
+      /* 📊 Main Table Container */
+      .table-container {
+        background: #ffffff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        margin-bottom: 30px;
+      }
+
+      /* Purple Table Header */
+      .table-header {
+        background: linear-gradient(135deg, #4361ee, #3f37c9);
+        color: #ffffff;
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .table-header span {
+        letter-spacing: 0.5px;
+      }
+
+      /* Rows styling */
+      .employee-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .employee-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: var(--transition);
+      }
+
+      .employee-row:last-child {
+        border-bottom: none;
+      }
+
+      .employee-row:hover {
+        background-color: #f9fbff;
+      }
+
+      .employee-info-cell {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .employee-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        background-color: #eef2f5;
+      }
+
+      .employee-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .employee-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2b2b2b;
+        margin-bottom: 2px;
+      }
+
+      .employee-id {
+        font-size: 12px;
+        color: var(--gray);
+        font-weight: 500;
+      }
+
+      .dob-cell {
+        font-size: 15px;
+        font-weight: 500;
+        color: #4a5568;
+        text-align: right;
+      }
+
+      /* Today's birthday highlight badge */
+      .today-highlight {
+        background-color: rgba(232, 62, 140, 0.08);
+      }
+
+      .today-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        background-color: var(--pink-accent);
+        color: #ffffff;
+        border-radius: 20px;
+        margin-left: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        vertical-align: middle;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(232, 62, 140, 0.4);
+        }
+
+        70% {
+          transform: scale(1.03);
+          box-shadow: 0 0 0 6px rgba(232, 62, 140, 0);
+        }
+
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(232, 62, 140, 0);
+        }
+      }
+
+      /* 📱 Responsive Adjustments */
+      @media (max-width: 1024px) {
+        body {
+          margin-left: 0;
+          padding-top: 75px;
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .summary-row {
+          gap: 15px;
+          margin-bottom: 25px;
+        }
+
+        .table-header,
+        .employee-row {
+          padding: 12px 16px;
+        }
+
+        .employee-name {
+          font-size: 14px;
+        }
+
+        .dob-cell {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="content-container">
+
+      <!-- Summary Cards -->
+      <div class="summary-row">
+
+        <!-- Card: Birthdays Today -->
+        <div class="summary-card today">
+          <div class="card-info">
+            <span class="card-title">Birthdays Today</span>
+            <span class="card-value">
+              <%= birthdaysToday %>
+            </span>
+          </div>
+          <div class="card-icon-container">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+        </div>
+
+        <!-- Card: Next 30 Days -->
+        <div class="summary-card upcoming">
+          <div class="card-info">
+            <span class="card-title">Next 30 Days</span>
+            <span class="card-value">
+              <%= birthdaysNext30Days %>
+            </span>
+          </div>
+          <div class="card-icon-container">
+            <i class="fa-solid fa-cake-candles"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Table Listing -->
+      <div class="table-container">
+        <div class="table-header">
+          <span>Employees</span>
+          <span>Date of Birth</span>
+        </div>
+
+        <div class="employee-list">
+          <% if (birthdays.length> 0) { %>
+            <% birthdays.forEach(emp=> { %>
+              <div class="employee-row <%= emp.is_today ? 'today-highlight' : '' %>">
+                <div class="employee-info-cell">
+                  <img class="employee-avatar"
+                    src="<%= emp.photo ? emp.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
+                    alt="<%= emp.name %>">
+                  <div class="employee-details">
+                    <div class="employee-name">
+                      <%= emp.name %>
+                        <% if (emp.is_today) { %>
+                          <span class="today-badge"><i class="fa-solid fa-sparkles me-1"></i>Today</span>
+                          <% } %>
+                    </div>
+                    <div class="employee-id">
+                      <%= emp.emp_id %>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dob-cell">
+                  <%= emp.formatted_date %>
+                </div>
+              </div>
+              <% }) %>
+                <% } else { %>
+                  <div class="py-5 text-center text-muted">
+                    <i class="fa-solid fa-calendar-xmark fs-1 mb-3"></i>
+                    <p class="mb-0 font-weight-500">No birthdays available.</p>
+                  </div>
+                  <% } %>
+        </div>
+      </div>
+
+    </div>
+
+  </body>
+
+  </html>
