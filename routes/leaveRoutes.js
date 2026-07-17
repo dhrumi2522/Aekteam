@@ -19,6 +19,10 @@ router.get("/birthdays", verifyToken, leaveController.getUpcomingBirthdays);
 
 router.get("/leave", verifyToken, leaveController.renderLeavePage);
 
+router.get("/festival-leaves", verifyToken, leaveController.renderFestivalLeavesPage);
+
+router.get("/festival-leaves/upcoming", verifyToken, leaveController.getUpcomingFestivalLeavesJSON);
+
 router.post("/leave/cancel", verifyToken, leaveController.cancelLeave);
 
 

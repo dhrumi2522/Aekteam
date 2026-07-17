@@ -291,3 +291,31 @@ exports.getUpcomingBirthdays = async (req, res) => {
         res.status(500).json({ success: false, message: "Error fetching birthday data" });
     }
 };
+
+// ✅ Render Employee Festival Leaves Page
+exports.renderFestivalLeavesPage = async (req, res) => {
+    try {
+        const emp_id = req.user?.emp_id;
+        const employee = await employeeModel.findEmployee(emp_id);
+        const result = await pool.query(
+            "SELECT * FROM festival_leaves WHERE leave_date >= CURRENT_DATE ORDER BY leave_date ASC"
+        );
+        res.render("employee/festivalLeaves", { leaves: result.rows, employee });
+    } catch (error) {
+        console.error("Error rendering festival leaves page:", error);
+        res.status(500).send("Server Error");
+    }
+};
+
+// ✅ Get Upcoming Festival Leaves JSON (for dashboard widget)
+exports.getUpcomingFestivalLeavesJSON = async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM festival_leaves WHERE EXTRACT(MONTH FROM leave_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM leave_date) = EXTRACT(YEAR FROM CURRENT_DATE) AND leave_date >= CURRENT_DATE ORDER BY leave_date ASC"
+        );
+        res.json({ success: true, leaves: result.rows });
+    } catch (error) {
+        console.error("Error fetching upcoming festival leaves JSON:", error);
+        res.status(500).json({ success: false, message: "Error fetching festival leaves" });
+    }
+};

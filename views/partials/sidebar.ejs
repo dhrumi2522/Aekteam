@@ -169,50 +169,56 @@
           src="<%= employee.photo ? employee.photo : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' %>"
           alt="Profile Picture">
       </a>
-      <h3 class="EName"><%= employee.name %></h3>
-      <p>ID: <%= employee.emp_id %></p>
+      <h3 class="EName">
+        <%= employee.name %>
+      </h3>
+      <p>ID: <%= employee.emp_id %>
+      </p>
     </div>
 
     <!-- Nav Links -->
     <ul class="nav-links">
       <li><a href="/dashboard/employee/home"><i class="fas fa-home"></i> Home</a></li>
       <li><a href="/dashboard/employee/leave"><i class="fas fa-calendar-alt"></i> Leave</a></li>
+      <li><a href="/dashboard/employee/festival-leaves"><i class="fas fa-umbrella-beach"></i> Festival Leaves</a></li>
       <li><a href="/dashboard/employee/attendance-page"><i class="fas fa-user-check"></i> Attendance</a></li>
-      <li><a href="/dashboard/employee/RegularizationPage"><i class="fas fa-tasks"></i> Regularization & Permission</a></li>
+      <li><a href="/dashboard/employee/RegularizationPage"><i class="fas fa-tasks"></i> Regularization & Permission</a>
+      </li>
 
-      <% if (["emp_43", "emp_32", "emp_33"].includes(employee.emp_id)) { %>
+      <% if (["emp_43", "emp_32" , "emp_33" ].includes(employee.emp_id)) { %>
         <li><a href="/dashboard/employee/projects"><i class="fas fa-project-diagram"></i> Add Project</a></li>
         <li><a href="/dashboard/employee/projects/summary-report"><i class="fas fa-chart-line"></i> Report</a></li>
-      <% } %>
+        <% } %>
 
-      <% if (employee.role === "IT_Team") { %>
-        <li><a href="/dashboard/employee/projects/addTask"><i class="fas fa-clock"></i> Time Tracker</a></li>
-        <li><a href="/dashboard/employee/projects/summary-reportOwn"><i class="fas fa-clipboard-list"></i> Work Report</a></li>
-      <% } %>
+          <% if (employee.role==="IT_Team" ) { %>
+            <li><a href="/dashboard/employee/projects/addTask"><i class="fas fa-clock"></i> Time Tracker</a></li>
+            <li><a href="/dashboard/employee/projects/summary-reportOwn"><i class="fas fa-clipboard-list"></i> Work
+                Report</a></li>
+            <% } %>
 
-      <li>
-        <a href="#" class="logout" onclick="logoutUser();">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
-      </li>
+              <li>
+                <a href="#" class="logout" onclick="logoutUser();">
+                  <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+              </li>
     </ul>
   </div>
 
   <!-- Sidebar JS -->
   <script>
     function toggleSidebar() {
-        document.querySelector('.sidebar').classList.toggle('active');
+      document.querySelector('.sidebar').classList.toggle('active');
     }
 
     function logoutUser() {
-        fetch('/logout', {
-            method: 'POST',
-            credentials: 'same-origin'
-        }).then(() => {
-            window.location.href = '/login';
-        }).catch(err => console.error('Logout failed:', err));
+      fetch('/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+      }).then(() => {
+        window.location.href = '/login';
+      }).catch(err => console.error('Logout failed:', err));
     }
-</script>
+  </script>
 
 </body>
 
